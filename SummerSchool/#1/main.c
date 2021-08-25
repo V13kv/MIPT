@@ -8,7 +8,7 @@ void errorHandler(const int error_code, const char const *error_function_name);
 void getCoefficients(const double *a, const double *b, const double *c);
 void solveTheEquation(const double a, const double b, const double c);
 
-const double eps = 1e-10;
+const double EPS = 1e-10;
 enum ERROR_CODES
 {
     UNKNOWN_ERROR,
@@ -69,11 +69,11 @@ void getCoefficients(const double *a, const double *b, const double *c)
 void solveTheEquation(const double a, const double b, const double c)
 {
     const double D = b*b - 4*a*c;
-    if (D - eps < 0)
+    if (D - EPS < 0)
     {
         printf("There are no roots\n");
     }
-    else if (D - eps > 0)
+    else if (D - EPS > 0)
     {
         double sD = sqrt(D);
         double root1 = (-b + sD) / (2*a);
