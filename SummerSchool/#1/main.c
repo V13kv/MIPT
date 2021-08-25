@@ -68,8 +68,7 @@ void getCoefficients(double *a, double *b, double *c)
 void solveTheEquation(double a, double b, double c)
 {
     double D = b*b - 4*a*c;
-    double sD = sqrt(D);
-
+    
     double eps = 1e-10;
     if (D - eps < 0)
     {
@@ -77,6 +76,7 @@ void solveTheEquation(double a, double b, double c)
     }
     else if (D - eps > 0)
     {
+        double sD = sqrt(D);
         double root1 = (-b + sD) / (2*a);
         double root2 = (-b - sD) / (2*a);
         
