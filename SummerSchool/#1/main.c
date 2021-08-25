@@ -4,9 +4,9 @@
 
 
 void startupMessage();
-void errorHandler(int error_code, char *error_function_name);
-void getCoefficients(double *a, double *b, double *c);
-void solveTheEquation(double a, double b, double c);
+void errorHandler(const int error_code, const char *error_function_name);
+void getCoefficients(const double *a, const double *b, const double *c);
+void solveTheEquation(const double a, const double b, const double c);
 
 enum ERROR_CODES
 {
@@ -35,7 +35,7 @@ void startupMessage()
     printf("---Program to find the roots of an equation---\n");
 }
 
-void errorHandler(int error_code, char *error_function_name)
+void errorHandler(const int error_code, const char *error_function_name)
 {
     switch (error_code)
     {
@@ -51,7 +51,7 @@ void errorHandler(int error_code, char *error_function_name)
     }
 }
 
-void getCoefficients(double *a, double *b, double *c)
+void getCoefficients(const double *a, const double *b, const double *c)
 {
     if (a == NULL || b == NULL || c == NULL)
     {
@@ -60,12 +60,12 @@ void getCoefficients(double *a, double *b, double *c)
 
     while (scanf("%lf %lf %lf", a, b, c) != 3)
     {
-        errorHandler(BAD_COEFFICIENT, "getCoefficients()");
+        errorHandler(BAD_COEFFICIENT, __func__);
         fflush(stdin);
     }
 }
 
-void solveTheEquation(double a, double b, double c)
+void solveTheEquation(const double a, const double b, const double c)
 {
     double D = b*b - 4*a*c;
     
