@@ -4,10 +4,11 @@
 
 
 void startupMessage();
-void errorHandler(const int error_code, const char *error_function_name);
+void errorHandler(const int error_code, const char const *error_function_name);
 void getCoefficients(const double *a, const double *b, const double *c);
 void solveTheEquation(const double a, const double b, const double c);
 
+const double eps = 1e-10;
 enum ERROR_CODES
 {
     UNKNOWN_ERROR,
@@ -35,7 +36,7 @@ void startupMessage()
     printf("---Program to find the roots of an equation---\n");
 }
 
-void errorHandler(const int error_code, const char *error_function_name)
+void errorHandler(const int error_code, const char const *error_function_name)
 {
     switch (error_code)
     {
@@ -67,9 +68,7 @@ void getCoefficients(const double *a, const double *b, const double *c)
 
 void solveTheEquation(const double a, const double b, const double c)
 {
-    double D = b*b - 4*a*c;
-    
-    double eps = 1e-10;
+    const double D = b*b - 4*a*c;
     if (D - eps < 0)
     {
         printf("There are no roots\n");
