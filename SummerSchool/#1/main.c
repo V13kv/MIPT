@@ -1,15 +1,33 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <stdlib.h>
 
 
-void getCoefficients(double *p_a, double *p_b, double *p_c)
+void startupMessage();
+void errorHandler(int error_code, char *error_function_name);
+void getCoefficients(double *a, double *b, double *c);
+void solveTheEquation(double a, double b, double c);
+
+enum ERROR_CODES
 {
-    if (scanf("%lf %lf %lf", p_a, p_b, p_c) != 3)
-    {
-        printf("[!] Check input data\n");
-        exit(1);
-    }
+    UNKNOWN_ERROR,
+    BAD_POINTERS_PASSED,
+    BAD_COEFFICIENT
+};
+
+int main(void)
+{
+    // Intorduction message
+    startupMessage();
+
+    // Get input data
+    double a = 0, b = 0, c = 0;
+    getCoefficients(NULL, &b, &c);
+
+    // Calculations to find roots
+    solveTheEquation(a, b, c);
+
+    return 0;
 }
 
 void startupMessage()
@@ -17,34 +35,58 @@ void startupMessage()
     printf("---Program to find the roots of an equation---\n");
 }
 
-int main()
+void errorHandler(int error_code, char *error_function_name)
 {
-    startupMessage();
-
-    // Get input data
-    double a, b, c;
-    getCoefficients(&a, &b, &c);
-
-    // Calculations to find roots
-    int D = b*b - 4*a*c;
-    if (D < 0)
+    switch (error_code)
     {
-        printf("[!] There are no roots");
+        case BAD_COEFFICIENT:
+            printf("[ERROR] Bad coefficient typed in %s function! You should enter a number!\n", error_function_name);
+            break;
+        case BAD_POINTERS_PASSED:
+            printf("[ERROR] Null ptr's passed to a %s function\n", error_function_name);
+            exit(BAD_POINTERS_PASSED);
+        default:
+            printf("[ERROR] Unknown error in function %s\n", error_function_name);
+            exit(UNKNOWN_ERROR);
     }
-    else if (D == 0)
+}
+
+void getCoefficients(double *a, double *b, double *c)
+{
+    if (a == NULL || b == NULL || c == NULL)
     {
-        printf("Root found: %f", b == 0 ? 0 : -b/(2*a));
+        errorHandler(BAD_POINTERS_PASSED, "getCoefficients()");
+    }
+
+    while (scanf("%lf %lf %lf", a, b, c) != 3)
+    {
+        errorHandler(BAD_COEFFICIENT, "getCoefficients()");
+        fflush(stdin);
+    }
+}
+
+void solveTheEquation(double a, double b, double c)
+{
+    double sD = sqrt(b*b - 4*a*c);
+    double firstPartOfTheRoot = -b/(2*a);
+    double secondPartOfTheRoot = sD / (2*a);
+
+    double eps = 1e-10;
+    if (sD - eps < 0)
+    {
+        printf("There are no roots\n");
+    }
+    else if (sD - eps > 0)
+    {
+        double root1 = firstPartOfTheRoot + secondPartOfTheRoot;
+        double root2 = firstPartOfTheRoot - secondPartOfTheRoot;
+        
+        printf("Root #1: %f\n", root1);
+        printf("Root #2: %f\n", root2);
     }
     else
     {
-        printf(
-            "Root #1: %f\n"
-            "Root #2: %f", 
-            ( -b+sqrt(D) ) / (2*a),
-            ( -b-sqrt(D) ) / (2*a)
-        );
+        double root = ( b == 0 ? 0 : firstPartOfTheRoot );  // Checking whether the root is 0 (if so then beautify output (print 0, not -0))
+        printf("Root found: %f\n", root);
     }
-
-
-    return 0;
 }
