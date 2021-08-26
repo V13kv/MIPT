@@ -12,7 +12,7 @@
 
 const double EPS = 1e-6;//DBL_EPSILON
 const long int TOTAL_UNIT_TESTS = 1483647;
-const bool UNIT_TEST = false;  // if true than program will run in unit test mode
+const bool UNIT_TEST = true;  // if true than program will run in unit test mode
 const double RAND_MAX_D = RAND_MAX;
 const double MIN_DOUBLE_VALUE = -1000.0;
 const double MAX_DOUBLE_VALUE = 1000.0;
