@@ -1,17 +1,21 @@
 //TODO: move all declarations to .h files to beautify the code
+//TODO: add namespaces
+//maybe one more TODO: write normal errorHandler
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <signal.h>
 #include <math.h>
 #include <time.h>
-#include <stdbool.h>
-#include <float.h>
+#include <string.h>
+//#include <float.h>  // Only used for DBL_EPSILON
 
 
 const double EPS = 1e-6;//DBL_EPSILON
+const int TOTAL_UNIT_TESTS = 1000000;
+const bool UNIT_TEST = true;  // if true than program will run in unit test mode
 const double RAND_MAX_D = RAND_MAX;
-const int TOTAL_UNIT_TESTS = 10000;
 const double MIN_DOUBLE_VALUE = -1000.0;
 const double MAX_DOUBLE_VALUE = 1000.0;
 
@@ -33,8 +37,6 @@ enum UNITTEST_RESULTS
 {
     WRONG_ANSWER,
     CORRECT_ANSWER,
-    TESTS_ARE_NOT_PASSED = 0,
-    TESTS_ARE_PASSED,
 };
 
 // GENERAL FUNCTIONS
@@ -43,29 +45,32 @@ void errorHandler(const int error_code, const char *const error_function_name);
 void getCoefficients(double *const a, double *const b, double *const c);
 int solveTheEquation(const double a, const double b, const double c, double *const roots);
 void printRoots(const double *const roots, const uint8_t total_roots);
+// END OF GENERAL FUNCTIONS
 
 // FUNCTIONS FOR UNIT TEST
 double get_rand_0_1(void);
 double get_rand_in_range(const double min, const double max);
 void generateCoefficients(double *const a, double *const b, double *const c);
 bool areRootsCorrect(const double a, const double b, const double c, double *const roots, const uint8_t roots_found);
-bool unitTest(void);
+int unitTest(void);
+// END OF UNIT TEST FUNCTIONS
 
 int main(void)
 {
     // Intorduction message
     startupMessage();
 
-    bool unit_testing = true;
-    if (unit_testing)
+    // Choosing the way relying on the UNIT_TEST variable
+    if (UNIT_TEST)
     {
-        if (unitTest())
+        int tests_passed = unitTest();
+        if (tests_passed == TOTAL_UNIT_TESTS)
         {
-            printf("[+] All %d tests are successfully passed!\n", TOTAL_UNIT_TESTS);
+            printf("[+] All %d tests are successfully passed!\n", tests_passed);
         }      
         else
         {
-            printf("[!] Not all %d tests are successfully passed!\n", TOTAL_UNIT_TESTS);
+            printf("[!] Only %d tests are successfully passed!\n", tests_passed);
         }
     }
     else
@@ -157,42 +162,51 @@ bool areRootsCorrect(const double a, const double b, const double c, double *con
 /*
  * Function:  unitTest.
  * What does it do?: Tests the program TOTAL_UNIT_TESTS times.
- * Returns: 1 if the tests are passed
- *          0 if the tests are not passed
+ * Returns: total amount of passed tests
  */
-bool unitTest(void)
-//TODO: Cycle
+int unitTest(void)
 {
     // Setting the seed
     srand(time(NULL));
 
-    // Randomly generate coefficients
-    double a = 0, b = 0, c = 0;
-    generateCoefficients(&a, &b, &c);
+    // Define variables for the while cycle
+    double a, b, c;  // Our coefficients
+    double roots[2]; // The actual roots of the equation (the will be no more than 2)
+    uint8_t roots_found;  // The amount of root that solveTheEquation() function will find
+    int tests_passed = 0;
 
-    // Solving the equation (using our algorithm)
-    uint8_t roots_found = 0;
-    double roots[2] = {0, 0};
-    roots_found = solveTheEquation(a, b, c, roots);
-
-    // Checking our roots for the correctness
-    if (roots_found)
+    while (tests_passed < TOTAL_UNIT_TESTS)
     {
-        if (areRootsCorrect(a, b, c, roots, roots_found))
+        // Initializing variables (but it is not important actually)
+        a = 0, b = 0, c = 0, roots_found = 0;
+        memset(roots, 0, sizeof(double) * 2);  // Clearing the roots array
+
+        // Randomly generate coefficients
+        generateCoefficients(&a, &b, &c);
+
+        // Solving the equation (using our algorithm)
+        roots_found = solveTheEquation(a, b, c, roots);
+
+        // Checking our roots for the correctness
+        if (roots_found)  // if there are any roots
         {
-            printf("[CORRECT] Answer is correct for the roots: ");
-            printRoots(roots, roots_found);
-        }
-        else
-        {
-            printf("[!] Answer is incorrect for the roots: ");
-            printRoots(roots, roots_found);
-            
-            return TESTS_ARE_NOT_PASSED;
+            if (areRootsCorrect(a, b, c, roots, roots_found))
+            {
+                // Uncomment 2 rows below if you want to see the roots which satisfy the quadratic equation
+                //printf("[CORRECT] Answer is correct for the roots: ");
+                //printRoots(roots, roots_found);
+
+                ++tests_passed;
+            }
+            else
+            {
+                printf("[!] Answer is incorrect for the roots: ");
+                printRoots(roots, roots_found);
+            }
         }
     }
 
-    return TESTS_ARE_PASSED;
+    return tests_passed;
 }
 
 static void startupMessage()
