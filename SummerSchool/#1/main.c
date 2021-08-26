@@ -168,15 +168,14 @@ long int unitTest(void)
     // Setting the seed
     srand(time(NULL));
 
-    // Define variables for the while cycle
-    double a = 0, b = 0, c = 0;  // Our coefficients
-    double roots[2] = {0, 0}; // The actual roots of the equation (the will be no more than 2)
-    uint8_t roots_found = 0;  // The amount of root that solveQuadraticEquation() function will find
-    long int tests_passed = 0;
-
     // Main 'TESTING' cycle
+    long int tests_passed = 0;
     while (tests_passed < TOTAL_UNIT_TESTS)
     {
+        double a = 0, b = 0, c = 0;  // Our coefficients
+        double roots[2] = {0, 0};  // The actual roots of the equation (the will be no more than 2)
+        uint8_t roots_found = 0;  // The amount of root that solveQuadraticEquation() function will find
+
         // Randomly generate coefficients
         generateCoefficients(&a, &b, &c);
 
