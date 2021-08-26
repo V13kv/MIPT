@@ -41,7 +41,7 @@ enum UNITTEST_RESULTS
 void startupMessage();
 void errorHandler(const int error_code, const char *const error_function_name);
 void getCoefficients(double *const a, double *const b, double *const c);
-int solveTheEquation(const double a, const double b, const double c, double *const roots);
+int solveQuadraticEquation(const double a, const double b, const double c, double *const roots);
 void printRoots(const double *const roots, const uint8_t total_roots);
 // END OF GENERAL FUNCTIONS
 
@@ -81,7 +81,7 @@ int main(void)
         // Finding roots
         uint8_t roots_found = 0;
         double roots[2] = {0, 0};
-        roots_found = solveTheEquation(a, b, c, roots);
+        roots_found = solveQuadraticEquation(a, b, c, roots);
 
         // Printing roots
         printRoots(roots, roots_found);
@@ -171,7 +171,7 @@ long int unitTest(void)
     // Define variables for the while cycle
     double a, b, c;  // Our coefficients
     double roots[2]; // The actual roots of the equation (the will be no more than 2)
-    uint8_t roots_found;  // The amount of root that solveTheEquation() function will find
+    uint8_t roots_found;  // The amount of root that solveQuadraticEquation() function will find
     long int tests_passed = 0;
 
     // Main 'TESTING' cycle
@@ -185,7 +185,7 @@ long int unitTest(void)
         generateCoefficients(&a, &b, &c);
 
         // Solving the equation (using our algorithm)
-        roots_found = solveTheEquation(a, b, c, roots);
+        roots_found = solveQuadraticEquation(a, b, c, roots);
 
         // Checking our roots for the correctness
         if (roots_found)  // if there are any roots
@@ -262,7 +262,7 @@ void getCoefficients(double *const a, double *const b, double *const c)
 }
 
 /*
- * Function:  solveTheEquation.
+ * Function:  solveQuadraticEquation.
  * What does it do?: Solves the equations with a given coefficients.
  * Returns: the number of solutions for an equation.
  * 
@@ -270,7 +270,7 @@ void getCoefficients(double *const a, double *const b, double *const c)
  *      a, b, c: coefficients in a quadratic equation of the form ax^2+bx+c=0
  *      roots: array that saves found roots
  */
-int solveTheEquation(const double a, const double b, const double c, double *const roots)
+int solveQuadraticEquation(const double a, const double b, const double c, double *const roots)
 {
     const double D = b*b - 4*a*c;
 
