@@ -9,7 +9,6 @@
 #include "../include/random.h"
 #include "../include/quadratic_equation.h"
 
-
 /*
  * Function:  generateCoefficients.
  * What does it do?: Randomly generates coefficients (a, b and c).
@@ -33,7 +32,7 @@ int generateCoefficients(double *const a, double *const b, double *const c)
  * Function:  areRootsCorrect.
  * What does it do?: Determines whether the roots are correct.
  * Returns: 0 if the roots do not satisfy the quadratic equation
- *          1 if the roots satisfy the quadratic equation.
+ *          1 if the roots satisfy the quadratic equation
  * 
  * Arguments:
  *      a, b, c: coefficients in a quadratic equation of the form ax^2+bx+c=0
@@ -44,14 +43,14 @@ bool areRootsCorrect(const double a, const double b, const double c, double *con
 {
     for (int root_num = 0; root_num < roots_found; ++root_num)
     {
-        double check_res = a*roots[root_num]*roots[root_num] + b*roots[root_num] + c;
+        double check_res = a * roots[root_num] * roots[root_num] + b * roots[root_num] + c;
         if (fabs(check_res) < EPS)
             continue;
         else
             return WRONG_ANSWER;
     }
 
-    return CORRECT_ANSWER;  
+    return CORRECT_ANSWER;
 }
 
 /*
@@ -66,11 +65,12 @@ long int unitTest(void)
 
     // Main 'TESTING' cycle
     long int tests_passed = 0;
-    while (tests_passed < TOTAL_UNIT_TESTS)
+    long int tests_failed = 0;
+    while (tests_passed < TOTAL_UNIT_TESTS && tests_failed < TOTAL_UNIT_TESTS)
     {
-        double a = 0, b = 0, c = 0;  // Our coefficients
-        double roots[2] = {0, 0};  // The actual roots of the equation (the will be no more than 2)
-        uint8_t roots_found = 0;  // The amount of root that solveQuadraticEquation() function will find
+        double a = 0, b = 0, c = 0; // Our coefficients
+        double roots[2] = {0, 0};   // The actual roots of the equation (the will be no more than 2)
+        uint8_t roots_found = 0;    // The amount of root that solveQuadraticEquation() function will find
 
         // Randomly generate coefficients
         generateCoefficients(&a, &b, &c);
@@ -79,22 +79,21 @@ long int unitTest(void)
         roots_found = solveQuadraticEquation(a, b, c, roots);
 
         // Checking our roots for the correctness
-        if (roots_found)  // if there are any roots
+        if (roots_found) // if there are any roots
         {
             if (areRootsCorrect(a, b, c, roots, roots_found))
             {
                 // Uncomment 2 rows below if you want to see the roots which satisfy the quadratic equation
                 //printf("[CORRECT] Answer is correct for the roots: ");
                 //printRoots(roots, roots_found);
-
                 ++tests_passed;
             }
             else
             {
-                //TODO: add printing coefficients
-                printf("[!] Answer is incorrect for the equation: TODO:");
-                printf("[!] Answer is incorrect for the roots: ");
+                printf("[!] Answer is incorrect for the equation: %fx**2 + %f*x + %f = 0 with roots: ", a, b, c);
                 printRoots(roots, roots_found);
+
+                ++tests_failed;
             }
         }
     }

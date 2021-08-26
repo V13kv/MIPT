@@ -7,7 +7,7 @@
 /*
  * Function:  errorHandler.
  * What does it do?: Handles errors.
- * Returns: the number of solutions for an equation.
+ * Returns: the ERROR_CODE of an error.
  * 
  * Arguments:
  *      error_code: number of an error_code (see ERROR_CODES for all errors)

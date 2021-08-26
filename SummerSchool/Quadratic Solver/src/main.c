@@ -1,5 +1,3 @@
-//TODO: documentation (doxygen tutorial and etc.)
-//TODO: rename folder in github (unittest, example of running)
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,7 +6,8 @@
 
 #include "../include/constants.h"
 #include "../include/quadratic_equation.h"
-//#include "../include/unit_test.h"
+#include "../include/unit_test.h"  // comment if you don't want to compile in unit test mode (only tests will be done)
+
 
 int main(void)
 {
