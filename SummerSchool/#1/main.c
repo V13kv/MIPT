@@ -1,5 +1,4 @@
 //TODO: move all declarations to .h files to beautify the code
-//TODO: add namespaces
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdint.h>
