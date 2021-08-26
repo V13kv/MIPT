@@ -1,12 +1,19 @@
-// TODO: test program, automate process, write program that tests this program, just bruteforce (randomly)
+//TODO: move all declarations to .h files to beautify the code
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <signal.h>
 #include <math.h>
+#include <time.h>
+#include <stdbool.h>
+#include <float.h>
 
 
-const double EPS = 1e-10;
+const double EPS = 1e-6;//DBL_EPSILON
+const double RAND_MAX_D = RAND_MAX;
+const int TOTAL_UNIT_TESTS = 10000;
+const double MIN_DOUBLE_VALUE = -1000.0;
+const double MAX_DOUBLE_VALUE = 1000.0;
 
 enum ERROR_CODES
 {
@@ -22,30 +29,170 @@ enum TOTAL_ROOTS
     TWO_ROOTS
 };
 
+enum UNITTEST_RESULTS
+{
+    WRONG_ANSWER,
+    CORRECT_ANSWER,
+    TESTS_ARE_NOT_PASSED = 0,
+    TESTS_ARE_PASSED,
+};
+
+// GENERAL FUNCTIONS
 static void startupMessage();
 void errorHandler(const int error_code, const char *const error_function_name);
 void getCoefficients(double *const a, double *const b, double *const c);
 int solveTheEquation(const double a, const double b, const double c, double *const roots);
 void printRoots(const double *const roots, const uint8_t total_roots);
 
+// FUNCTIONS FOR UNIT TEST
+double get_rand_0_1(void);
+double get_rand_in_range(const double min, const double max);
+void generateCoefficients(double *const a, double *const b, double *const c);
+bool areRootsCorrect(const double a, const double b, const double c, double *const roots, const uint8_t roots_found);
+bool unitTest(void);
+
 int main(void)
 {
     // Intorduction message
     startupMessage();
 
-    // Getting input data
-    double a = 0, b = 0, c = 0;
-    getCoefficients(&a, &b, &c);
+    bool unit_testing = true;
+    if (unit_testing)
+    {
+        if (unitTest())
+        {
+            printf("[+] All %d tests are successfully passed!\n", TOTAL_UNIT_TESTS);
+        }      
+        else
+        {
+            printf("[!] Not all %d tests are successfully passed!\n", TOTAL_UNIT_TESTS);
+        }
+    }
+    else
+    {
+        // Getting input data
+        double a = 0, b = 0, c = 0;
+        getCoefficients(&a, &b, &c);
 
-    // Finding roots
+        // Finding roots
+        uint8_t roots_found = 0;
+        double roots[2] = {0, 0};
+        roots_found = solveTheEquation(a, b, c, roots);
+
+        // Printing roots
+        printRoots(roots, roots_found);
+    }
+
+    return 0;
+}
+
+/*
+ * Function:  get_rand_0_1.
+ * What does it do?: Generates random number between 0 and 1.
+ * Returns: randomly generated number.
+ */
+double get_rand_0_1(void)
+{
+    return rand() / RAND_MAX_D;
+}
+
+/*
+ * Function:  get_rand_in_range.
+ * What does it do?: Generates random number in the specified range.
+ * Returns: randomly generated number.
+ * 
+ * Arguments:
+ *      min: the left end of the line
+ *      max: the right end of the line
+ */
+double get_rand_in_range(const double min, const double max)
+{
+    return get_rand_0_1() * (max - min) + min;
+}
+
+/*
+ * Function:  generateCoefficients.
+ * What does it do?: Randomly generates coefficients (a, b and c).
+ * 
+ * Arguments:
+ *      a, b, c: coefficients in a quadratic equation of the form ax^2+bx+c=0
+ */
+void generateCoefficients(double *const a, double *const b, double *const c)
+{
+    if (a == NULL || b == NULL || c == NULL)
+    {
+        errorHandler(BAD_POINTERS_PASSED, __func__);
+    }
+
+    *a = get_rand_in_range(MIN_DOUBLE_VALUE, MAX_DOUBLE_VALUE);
+    *b = get_rand_in_range(MIN_DOUBLE_VALUE, MAX_DOUBLE_VALUE);
+    *c = get_rand_in_range(MIN_DOUBLE_VALUE, MAX_DOUBLE_VALUE);
+}
+
+/*
+ * Function:  areRootsCorrect.
+ * What does it do?: Determines whether the roots are correct.
+ * Returns: 0 if the roots do not satisfy the quadratic equation
+ *          1 if the roots satisfy the quadratic equation.
+ * 
+ * Arguments:
+ *      a, b, c: coefficients in a quadratic equation of the form ax^2+bx+c=0
+ *      roots: array that saves found roots
+ *      roots_found: total amount of roots to check
+ */
+bool areRootsCorrect(const double a, const double b, const double c, double *const roots, const uint8_t roots_found)
+{
+    for (int root_num = 0; root_num < roots_found; ++root_num)
+    {
+        double check_res = a*roots[root_num]*roots[root_num] + b*roots[root_num] + c;
+        if (fabs(check_res) < EPS)
+            continue;
+        else
+            return WRONG_ANSWER;
+    }
+
+    return CORRECT_ANSWER;  
+}
+
+/*
+ * Function:  unitTest.
+ * What does it do?: Tests the program TOTAL_UNIT_TESTS times.
+ * Returns: 1 if the tests are passed
+ *          0 if the tests are not passed
+ */
+bool unitTest(void)
+//TODO: Cycle
+{
+    // Setting the seed
+    srand(time(NULL));
+
+    // Randomly generate coefficients
+    double a = 0, b = 0, c = 0;
+    generateCoefficients(&a, &b, &c);
+
+    // Solving the equation (using our algorithm)
     uint8_t roots_found = 0;
     double roots[2] = {0, 0};
     roots_found = solveTheEquation(a, b, c, roots);
 
-    // Printing roots
-    printRoots(roots, roots_found);
+    // Checking our roots for the correctness
+    if (roots_found)
+    {
+        if (areRootsCorrect(a, b, c, roots, roots_found))
+        {
+            printf("[CORRECT] Answer is correct for the roots: ");
+            printRoots(roots, roots_found);
+        }
+        else
+        {
+            printf("[!] Answer is incorrect for the roots: ");
+            printRoots(roots, roots_found);
+            
+            return TESTS_ARE_NOT_PASSED;
+        }
+    }
 
-    return 0;
+    return TESTS_ARE_PASSED;
 }
 
 static void startupMessage()
@@ -119,7 +266,7 @@ int solveTheEquation(const double a, const double b, const double c, double *con
 
         return ONE_ROOT;
     }
-    else if (fabs(D) > EPS)
+    else if (D > 0)
     {
         const double sD = sqrt(D);
         const double root1 = (-b + sD) / (2*a);
@@ -152,9 +299,10 @@ void printRoots(const double *const roots, const uint8_t total_roots)
     }
     else
     {
-        for (uint8_t root_number = 0; root_number < total_roots; ++root_number)
+        for (uint8_t root_num = 0; root_num < total_roots; ++root_num)
         {
-            printf("Root #%u: %f\n", root_number, roots[root_number]);
+            printf("Root #%u: %f; ", root_num, roots[root_num]);
         }
     }   
+    printf("\n");
 }
