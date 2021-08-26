@@ -62,7 +62,7 @@ int main(void)
     // Choosing the way relying on the UNIT_TEST variable
     if (UNIT_TEST)
     {
-        long int tests_passed = unitTest();
+        long int tests_passed = unitTest();  // Test our program using TOTAL_UNIT_TESTS
         if (tests_passed == TOTAL_UNIT_TESTS)
         {
             printf("[+] All %d tests are successfully passed!\n", tests_passed);
