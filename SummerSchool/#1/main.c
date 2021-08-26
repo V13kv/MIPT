@@ -1,6 +1,5 @@
 //TODO: move all declarations to .h files to beautify the code
 //TODO: add namespaces
-//maybe one more TODO: write normal errorHandler
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -13,8 +12,8 @@
 
 
 const double EPS = 1e-6;//DBL_EPSILON
-const int TOTAL_UNIT_TESTS = 1000000;
-const bool UNIT_TEST = true;  // if true than program will run in unit test mode
+const long int TOTAL_UNIT_TESTS = 1483647;
+const bool UNIT_TEST = false;  // if true than program will run in unit test mode
 const double RAND_MAX_D = RAND_MAX;
 const double MIN_DOUBLE_VALUE = -1000.0;
 const double MAX_DOUBLE_VALUE = 1000.0;
@@ -52,8 +51,9 @@ double get_rand_0_1(void);
 double get_rand_in_range(const double min, const double max);
 void generateCoefficients(double *const a, double *const b, double *const c);
 bool areRootsCorrect(const double a, const double b, const double c, double *const roots, const uint8_t roots_found);
-int unitTest(void);
+long int unitTest(void);
 // END OF UNIT TEST FUNCTIONS
+
 
 int main(void)
 {
@@ -63,7 +63,7 @@ int main(void)
     // Choosing the way relying on the UNIT_TEST variable
     if (UNIT_TEST)
     {
-        int tests_passed = unitTest();
+        long int tests_passed = unitTest();
         if (tests_passed == TOTAL_UNIT_TESTS)
         {
             printf("[+] All %d tests are successfully passed!\n", tests_passed);
@@ -96,7 +96,7 @@ int main(void)
  * What does it do?: Generates random number between 0 and 1.
  * Returns: randomly generated number.
  */
-double get_rand_0_1(void)
+inline double get_rand_0_1(void)
 {
     return rand() / RAND_MAX_D;
 }
@@ -110,7 +110,7 @@ double get_rand_0_1(void)
  *      min: the left end of the line
  *      max: the right end of the line
  */
-double get_rand_in_range(const double min, const double max)
+inline double get_rand_in_range(const double min, const double max)
 {
     return get_rand_0_1() * (max - min) + min;
 }
@@ -164,7 +164,7 @@ bool areRootsCorrect(const double a, const double b, const double c, double *con
  * What does it do?: Tests the program TOTAL_UNIT_TESTS times.
  * Returns: total amount of passed tests
  */
-int unitTest(void)
+long int unitTest(void)
 {
     // Setting the seed
     srand(time(NULL));
@@ -173,8 +173,9 @@ int unitTest(void)
     double a, b, c;  // Our coefficients
     double roots[2]; // The actual roots of the equation (the will be no more than 2)
     uint8_t roots_found;  // The amount of root that solveTheEquation() function will find
-    int tests_passed = 0;
+    long int tests_passed = 0;
 
+    // Main 'TESTING' cycle
     while (tests_passed < TOTAL_UNIT_TESTS)
     {
         // Initializing variables (but it is not important actually)
@@ -209,7 +210,7 @@ int unitTest(void)
     return tests_passed;
 }
 
-static void startupMessage()
+inline void startupMessage()
 {
     printf("---Program to find the roots of an equation---\n");
 }
@@ -223,6 +224,7 @@ static void startupMessage()
  *      error_code: number of an error_code (see ERROR_CODES for all errors)
  *      error_function_name: the name of the function that called this function
  */
+//TODO: maybe write normal errorHandler (but it is not necessarily)
 void errorHandler(const int error_code, const char *const error_function_name)
 {
     switch (error_code)
