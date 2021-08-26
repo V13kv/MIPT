@@ -199,10 +199,6 @@ long int unitTest(void)
                 printRoots(roots, roots_found);
             }
         }
-
-        // Initializing variables (but it is not important actually)
-        a = 0, b = 0, c = 0, roots_found = 0;
-        memset(roots, 0, sizeof(double) * 2);  // Clearing the roots array
     }
 
     return tests_passed;
