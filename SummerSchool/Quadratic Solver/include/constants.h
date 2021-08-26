@@ -14,7 +14,7 @@
 
 static const double MIN_DOUBLE_VALUE = -1000.0;
 static const double MAX_DOUBLE_VALUE = 1000.0;
-static const long int TOTAL_UNIT_TESTS = 1483647;
+static const long int TOTAL_UNIT_TESTS = 10;
 static const double RAND_MAX_D = RAND_MAX;
 
 enum ERROR_CODES
