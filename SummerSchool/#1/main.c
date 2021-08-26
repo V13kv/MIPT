@@ -38,7 +38,7 @@ enum UNITTEST_RESULTS
 };
 
 // GENERAL FUNCTIONS
-static void startupMessage();
+void startupMessage();
 void errorHandler(const int error_code, const char *const error_function_name);
 void getCoefficients(double *const a, double *const b, double *const c);
 int solveTheEquation(const double a, const double b, const double c, double *const roots);
@@ -95,7 +95,7 @@ int main(void)
  * What does it do?: Generates random number between 0 and 1.
  * Returns: randomly generated number.
  */
-inline double get_rand_0_1(void)
+double get_rand_0_1(void)
 {
     return rand() / RAND_MAX_D;
 }
@@ -109,7 +109,7 @@ inline double get_rand_0_1(void)
  *      min: the left end of the line
  *      max: the right end of the line
  */
-inline double get_rand_in_range(const double min, const double max)
+double get_rand_in_range(const double min, const double max)
 {
     return get_rand_0_1() * (max - min) + min;
 }
@@ -209,7 +209,7 @@ long int unitTest(void)
     return tests_passed;
 }
 
-inline void startupMessage()
+void startupMessage()
 {
     printf("---Program to find the roots of an equation---\n");
 }
