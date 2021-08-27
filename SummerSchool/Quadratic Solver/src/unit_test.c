@@ -12,6 +12,7 @@
 /*
  * Function:  generateCoefficients.
  * What does it do?: Randomly generates coefficients (a, b and c).
+ * Returns: the function exit status.
  * 
  * Arguments:
  *      a, b, c: coefficients in a quadratic equation of the form ax^2+bx+c=0
@@ -20,83 +21,118 @@ int generateCoefficients(double *const a, double *const b, double *const c)
 {
     if (a == NULL || b == NULL || c == NULL)
     {
-        return errorHandler(BAD_POINTERS_PASSED, __func__);
+        printErrorMessage(BAD_POINTERS_PASSED, __func__);
+        return BAD_POINTERS_PASSED;
     }
 
     *a = get_rand_in_range(MIN_DOUBLE_VALUE, MAX_DOUBLE_VALUE);
     *b = get_rand_in_range(MIN_DOUBLE_VALUE, MAX_DOUBLE_VALUE);
     *c = get_rand_in_range(MIN_DOUBLE_VALUE, MAX_DOUBLE_VALUE);
+
+    return NO_ERRORS;
 }
 
 /*
- * Function:  areRootsCorrect.
+ * Function: areRootsCorrect.
  * What does it do?: Determines whether the roots are correct.
- * Returns: 0 if the roots do not satisfy the quadratic equation
- *          1 if the roots satisfy the quadratic equation
+ * Returns: the function exit status.
  * 
  * Arguments:
  *      a, b, c: coefficients in a quadratic equation of the form ax^2+bx+c=0
  *      roots: array that saves found roots
  *      roots_found: total amount of roots to check
+ *      roots_are_correct: whether the roots are satisfy to the given equation or not
  */
-bool areRootsCorrect(const double a, const double b, const double c, double *const roots, const uint8_t roots_found)
+int areRootsCorrect(const double a, const double b, const double c, double *const roots, const int roots_found, bool *const roots_are_correct)
 {
+    if (roots == NULL || roots_are_correct == NULL)
+    {
+        printErrorMessage(BAD_POINTERS_PASSED, __func__);
+        return BAD_POINTERS_PASSED;
+    }
+
     for (int root_num = 0; root_num < roots_found; ++root_num)
     {
         double check_res = a * roots[root_num] * roots[root_num] + b * roots[root_num] + c;
         if (fabs(check_res) < EPS)
             continue;
         else
-            return WRONG_ANSWER;
+            *roots_are_correct = false;
     }
 
-    return CORRECT_ANSWER;
+    *roots_are_correct = true;
+    return NO_ERRORS;
 }
 
 /*
  * Function:  unitTest.
  * What does it do?: Tests the program TOTAL_UNIT_TESTS times.
- * Returns: total amount of passed tests
+ * Returns: the function exit status.
+ * 
+ * Arguments:
+ *      tests_passed: total amount of passed tests
  */
-long int unitTest(void)
+int unitTest(long int *const tests_passed)
 {
+    if (tests_passed == NULL)
+    {
+        printErrorMessage(BAD_POINTERS_PASSED, __func__);
+        return BAD_POINTERS_PASSED;
+    }
+
     // Setting the seed
     srand(time(NULL));
 
     // Main 'TESTING' cycle
-    long int tests_passed = 0;
     long int tests_failed = 0;
-    while (tests_passed < TOTAL_UNIT_TESTS && tests_failed < TOTAL_UNIT_TESTS)
+    while (*tests_passed + tests_failed < TOTAL_UNIT_TESTS)
     {
         double a = 0, b = 0, c = 0; // Our coefficients
         double roots[2] = {0, 0};   // The actual roots of the equation (the will be no more than 2)
-        uint8_t roots_found = 0;    // The amount of root that solveQuadraticEquation() function will find
+        int roots_found = 0;    // The amount of root that solveQuadraticEquation() function will find
 
         // Randomly generate coefficients
-        generateCoefficients(&a, &b, &c);
+        int exit_code = generateCoefficients(&a, &b, &c);
+        if (exit_code != NO_ERRORS)
+        {
+            return exit_code;
+        }
 
         // Solving the equation (using our algorithm)
-        roots_found = solveQuadraticEquation(a, b, c, roots);
+        exit_code = solveQuadraticEquation(a, b, c, roots, &roots_found);
+        if (exit_code != NO_ERRORS)
+        {
+            return exit_code;
+        }
 
         // Checking our roots for the correctness
         if (roots_found) // if there are any roots
         {
-            if (areRootsCorrect(a, b, c, roots, roots_found))
+            bool rootsAreCorrect = false;
+            exit_code = areRootsCorrect(a, b, c, roots, roots_found, &rootsAreCorrect);
+            if (exit_code != NO_ERRORS)
             {
-                // Uncomment 2 rows below if you want to see the roots which satisfy the quadratic equation
-                //printf("[CORRECT] Answer is correct for the roots: ");
-                //printRoots(roots, roots_found);
-                ++tests_passed;
+                return exit_code;
+            }
+
+            if (rootsAreCorrect)
+            {
+                ++(*tests_passed);
             }
             else
             {
                 printf("[!] Answer is incorrect for the equation: %fx**2 + %f*x + %f = 0 with roots: ", a, b, c);
-                printRoots(roots, roots_found);
+                
+                exit_code = printRoots(roots, roots_found);
+                if (exit_code != NO_ERRORS)
+                {
+                    return exit_code;
+                }
 
                 ++tests_failed;
             }
         }
     }
 
-    return tests_passed;
+    return NO_ERRORS;
 }

@@ -5,26 +5,41 @@
 
 
 /*
- * Function:  errorHandler.
- * What does it do?: Handles errors.
- * Returns: the ERROR_CODE of an error.
+ * Function:  printErrorMessage.
+ * What does it do?: Printing human readable error message.
  * 
  * Arguments:
- *      error_code: number of an error_code (see ERROR_CODES for all errors)
+ *      error_code: number of an error_code (see FUNCTION_EXIT_CODES for all errors)
  *      error_function_name: the name of the function that called this function
  */
-int errorHandler(const int error_code, const char *const error_function_name)
+void printErrorMessage(const int error_code, const char *const error_function_name)
 {
     switch (error_code)
     {
         case BAD_COEFFICIENT:
             printf("[ERROR] Bad coefficient typed in %s function! You should enter a number!\n", error_function_name);
-            return BAD_COEFFICIENT;
+            break;
         case BAD_POINTERS_PASSED:
-            printf("[ERROR] Null ptr's passed to a %s function\n", error_function_name);
-            return BAD_POINTERS_PASSED;
+            printf("[ERROR] Null ptr passed to a %s function\n", error_function_name);
+            break;
         default:
             printf("[ERROR] Unknown error in function %s\n", error_function_name);
-            return UNKNOWN_ERROR;
+            break;
+    }
+}
+
+
+/*
+ * Function:  functionErrorMonitor.
+ * What does it do?: Handles all errors (just raising the error).
+ * 
+ * Arguments:
+ *      exit_code: number of an function error code (see FUNCTION_EXIT_CODES for all codes)
+ */
+void functionErrorMonitor(const int exit_code)
+{
+    if (exit_code != NO_ERRORS)
+    {
+        raise(exit_code);
     }
 }

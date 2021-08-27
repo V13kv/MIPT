@@ -4,9 +4,10 @@
 #include <stdint.h>
 #include <signal.h>
 
+#include "../include/error.h"
 #include "../include/constants.h"
 #include "../include/quadratic_equation.h"
-#include "../include/unit_test.h"  // comment if you don't want to compile in unit test mode (only tests will be done)
+//#include "../include/unit_test.h"  // comment if you don't want to compile in unit test mode (only tests will be done)
 
 
 int main(void)
@@ -15,7 +16,10 @@ int main(void)
     startupMessage();
 
     #ifdef UNIT_TEST_H
-        long int tests_passed = unitTest();  // Test our program using TOTAL_UNIT_TESTS
+        long int tests_passed = 0;
+        int exit_code = unitTest(&tests_passed);  // Test our program using TOTAL_UNIT_TESTS
+        functionErrorMonitor(exit_code);
+
         if (tests_passed == TOTAL_UNIT_TESTS)
         {
             printf("[+] All %d tests are successfully passed!\n", tests_passed);
@@ -27,20 +31,20 @@ int main(void)
     #else
         // Getting input data
         double a = 0, b = 0, c = 0;
-        
-        int code = getQuadraticEquationCoefficients(&a, &b, &c);
-        if (code != 0)
-        {
-            raise(code);
-        }
+
+        int exit_code = getQuadraticEquationCoefficients(&a, &b, &c);
+        functionErrorMonitor(exit_code);
 
         // Finding roots
-        uint8_t roots_found = 0;
+        int roots_found = 0;
         double roots[2] = {0, 0};
-        roots_found = solveQuadraticEquation(a, b, c, roots);
+
+        exit_code = solveQuadraticEquation(a, b, c, roots, &roots_found);
+        functionErrorMonitor(exit_code);
 
         // Printing roots
-        printRoots(roots, roots_found);
+        exit_code = printRoots(roots, roots_found);
+        functionErrorMonitor(exit_code);
     #endif  // UNIT_TEST_H
 
     system("pause");
