@@ -2,7 +2,8 @@
 #define ERROR_H
 
 
-int errorHandler(const int error_code, const char *const error_function_name);
+void printErrorMessage(const int error_code, const char *const error_function_name);
+void functionErrorMonitor(const int exit_code);
 
 
 #endif  // ERROR_H

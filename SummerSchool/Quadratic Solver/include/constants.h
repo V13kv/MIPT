@@ -17,8 +17,9 @@ static const double MAX_DOUBLE_VALUE = 1000.0;
 static const long int TOTAL_UNIT_TESTS = 10;
 static const double RAND_MAX_D = RAND_MAX;
 
-enum ERROR_CODES
+enum FUNCTION_EXIT_CODES
 {
+    NO_ERRORS,
     BAD_COEFFICIENT,
     UNKNOWN_ERROR = SIGTERM,
     BAD_POINTERS_PASSED = SIGTERM
