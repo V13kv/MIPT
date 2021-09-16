@@ -1,38 +1,52 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 
 #include "../include/text.h"
 
 
+/**
+ * @brief Get a text structure representing the text of the file with the calculated values (see text_st structure)
+ * 
+ * @param fs 
+ * @return text_st 
+ */
 text_st getTextObject(FILE *fs)
 {
-    // Get text size
-    const int capacity = getTextSize(fs);
+    // Get file capacity
+    int file_capacity = getTextCapacity(fs);
 
-    // Get the text data as null terminated string
-    char *data = (char *) malloc(sizeof(char) * (capacity + 1));
-    fread(data, sizeof(char), capacity, fs);
-    data[capacity] = '\0';
+    // Get the text data as null-terminated string AND get the size of the text
+    char *data = (char *) malloc(sizeof(char) * (file_capacity + 1));
+    int size = fread(data, sizeof(char), file_capacity, fs);
+    data[size] = '\0';
 
     // Get rid of empty lines
     deleteEmptyLines(data);
 
+    // Get text size
+    size = strlen(data);
+
     // Get total amount of non-empty lines
     const int lines_count = getTotalAmountOfLines(data);
 
-    // Create a text structure (object)
-    text_st text = {data, capacity, lines_count};
+    // Change the \n character to \0 to interact with lines as null-terminated string
+    convertLinesToCStrings(data);
+
+    // Create a text structure
+    text_st text = {data, size, lines_count};
 
     return text;
 }
 
-void freeTextObject(text_st text)
-{
-    free(text.data);
-}
-
-int getTextSize(FILE *fs)
+/**
+ * @brief Get the capacity of the text in the file
+ * 
+ * @param fs 
+ * @return int 
+ */
+int getTextCapacity(FILE *fs)
 {
     fseek(fs, 0, SEEK_END);
     int fsize = ftell(fs);
@@ -41,6 +55,11 @@ int getTextSize(FILE *fs)
     return fsize;
 }
 
+/**
+ * @brief Remove blank lines from a buffer
+ * 
+ * @param text 
+ */
 void deleteEmptyLines(char *text)
 {
     char *read = text;
@@ -58,8 +77,10 @@ void deleteEmptyLines(char *text)
         previous_char = *read;
         ++read;
     }
+    *write = '\0';
 
-    if (*(write - 1) != '\n')
+    /*
+    if (*--write != '\n')
     {
         *write++ = '\n';
         *write = '\0';
@@ -68,8 +89,32 @@ void deleteEmptyLines(char *text)
     {
         *write = '\0';
     }
+    */
 }
 
+/**
+ * @brief Converts lines ending in '\n' to C-string ending in '\0'
+ * 
+ * @param text 
+ */
+void convertLinesToCStrings(char *text)
+{
+    while (*text != '\0')
+    {
+        if (*text == '\n')
+        {
+            *text = '\0';
+        }
+        ++text;
+    }
+}
+
+/**
+ * @brief Get the total amount of lines in a buffer
+ * 
+ * @param text 
+ * @return int 
+ */
 int getTotalAmountOfLines(char *text)
 {
     int lines = 0;
@@ -85,160 +130,39 @@ int getTotalAmountOfLines(char *text)
     return lines;
 }
 
-void printTextObject(text_st text)
+/**
+ * @brief Print basic information about the structure including first 'symbols_to_print' symbols
+ * 
+ * @param text 
+ * @param symbols_to_print 
+ */
+void printTextObject(text_st text, int symbols_to_print)
 {
-    printf("text.capacity: %d\n", text.capacity);
+    assert(symbols_to_print <= text.size && "[!] You are trying to print text symbols more than you have!");
+
+    printf("text.size: %d\n", text.size);
     printf("text.lines_count: %d\n", text.lines_count);
 
-    for (int i = 0; i < text.capacity; ++i)
+    for (int symbol = 0; symbol < symbols_to_print; ++symbol)
     {
-        putchar(text.data[i]);
+        if (text.data[symbol] == '\0')
+        {
+            putchar('\n');
+        }
+        else
+        {
+            putchar(text.data[symbol]);
+        }
     }
     putchar('\n');
 }
 
-text_lines_st* getTextLinesObject(text_st text)
+/**
+ * @brief Free the memory allocated for the text of the file
+ * 
+ * @param text 
+ */
+void freeTextObject(text_st text)
 {
-    // Allocate memory for each line of a text
-    text_lines_st *lines = malloc(sizeof(text_lines_st) * text.lines_count);
-
-    // Fill each line structure of the lines array
-    char *text_p = text.data;
-    for (int line = 0; line < text.lines_count; ++line)
-    {
-        lines[line].beginning = text_p;
-
-        int line_length = 0;
-        while (*text_p++ != '\n')
-        {
-            ++line_length;
-        }
-        ++line_length;  // Counting \n symbol as a part of a string
-
-        lines[line].length = line_length;
-    }
-
-    return lines;
-}
-
-void freeTextLinesObject(text_lines_st *lines)
-{
-    free(lines);
-}
-
-void saveTextLinesObject(text_lines_st *lines, int lines_count, FILE *fs)
-{
-    for (int line = 0; line < lines_count; ++line)
-    {
-        fwrite(lines[line].beginning, sizeof(char), lines[line].length, fs);
-        ++line;
-    }
-}
-
-void printSeveralTextLines(text_lines_st *lines, int lines_to_print, int total_lines)
-{
-    assert(lines_to_print < total_lines && "[!] You are trying to print lines more than you have!");
-
-    for (int line = 0; line < lines_to_print; ++line)
-    {
-        printf("#%d line: ", line + 1);
-
-        int printed_characters = 0;
-        while (printed_characters < lines[line].length)
-        {
-            printf("%c", lines[line].beginning[printed_characters]);
-            ++printed_characters;
-        }
-
-        printf("length = %d\n", lines[line].length);
-    }
-}
-
-cmp_res_et lexicographicComparison(text_lines_st a, text_lines_st b)
-{
-    char *a_p = a.beginning;
-    char *b_p = b.beginning;
-
-    while (*a_p != '\n' && *b_p != '\n')
-    {
-        if (*a_p < *b_p)
-        {
-            return SECOND_LINE_IS_GREATER;
-        }
-        else if (*a_p > *b_p)
-        {
-            return SECOND_LINE_IS_LOWER;
-        }
-
-        ++a_p;
-        ++b_p;
-    }
-
-    if (*a_p == '\n')
-    {
-        --a_p;
-    }
-    if (*b_p == '\n')
-    {
-        --b_p;
-    }  
-
-    if (*a_p < *b_p)
-    {
-        return SECOND_LINE_IS_GREATER;
-    }
-    else if (*a_p > *b_p)
-    {
-        return SECOND_LINE_IS_LOWER;
-    }
-    else
-    {
-        return LINES_ARE_EQUAL;
-    }
-}
-
-char* my_strdup(char *line_data, int line_length)
-{
-    char *temp = malloc(sizeof(char) * line_length);
-    char *temp_p = temp;
-    char *line_data_p = line_data;
-
-    while (*line_data_p != '\n')
-    {
-        *temp = *line_data_p;
-
-        ++temp_p;
-        ++line_data_p;
-    }
-    *temp_p = '\n';
-
-    return temp;
-}
-
-void swap(text_lines_st *line1, text_lines_st *line2)
-{
-    text_lines_st temp = *line1;
-    *line1 = *line2;
-    *line2 = temp;
-}
-
-void lexicographicTextLinesSort(text_lines_st *lines, const int lines_count)
-{
-    for (int first_line = 0; first_line < lines_count; ++first_line)
-    {
-        for (int second_line = first_line + 1; second_line < lines_count; ++second_line)
-        {
-            cmp_res_et result = lexicographicComparison(lines[first_line], lines[second_line]);
-            switch (result)
-            {
-                case SECOND_LINE_IS_LOWER:
-                    swap(&lines[first_line], &lines[second_line]);
-                    break;
-                case SECOND_LINE_IS_GREATER:
-                    break;
-                case LINES_ARE_EQUAL:
-                    break;
-            }
-        }
-    }
+    free(text.data);
 }
