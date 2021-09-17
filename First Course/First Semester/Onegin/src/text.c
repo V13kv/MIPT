@@ -15,7 +15,7 @@
 text_st getTextObject(FILE *fs)
 {
     // Get file capacity
-    int file_capacity = getTextCapacity(fs);
+    const int file_capacity = getTextCapacity(fs);
 
     // Get the text data as null-terminated string AND get the size of the text
     char *data = (char *) malloc(sizeof(char) * (file_capacity + 1));

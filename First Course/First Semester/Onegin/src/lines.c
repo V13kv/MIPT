@@ -1,7 +1,10 @@
+//#define CMP_LINES_WO_PUNCTUATION  // Used to exclude punctuation from lines comparison functions
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "../include/lines.h"
 
@@ -76,9 +79,39 @@ void saveTextLinesObject(text_lines_st *lines, int count_lines, FILE *fs)
 }
 
 
+/**
+ * @brief Determine whether the passed char is not a punctuation symbol
+ * 
+ * @param chr 
+ * @return true 
+ * @return false 
+ */
+bool isLetter(char chr)
+{
+    // For english symbols
+    if ((chr >= 'A' && chr <= 'Z') || (chr >= 'a' && chr <= 'z'))
+    {
+        return true;
+    }
+    // For russian symbols
+    else if ((chr >= 'À' && chr <= 'ß') || (chr >= 'à' && chr <= 'ÿ'))
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
 
-//TODO: optimize
-int normalComparison(const void* a, const void* b)
+/**
+ * @brief Compare lines excluding punctuation
+ * 
+ * @param a 
+ * @param b 
+ * @return int 
+ */
+int directLinesComparison(const void *a, const void *b)
 {
     text_lines_st *line1 = (text_lines_st *) a;
     text_lines_st *line2 = (text_lines_st *) b;
@@ -87,6 +120,21 @@ int normalComparison(const void* a, const void* b)
     char *l2p = line2->beginning;
     while (*l1p != '\0' && *l2p != '\0')
     {
+        #ifdef CMP_LINES_WO_PUNCTUATION
+            if (!isLetter(*l1p) || !isLetter(*l2p))
+            {
+                while (*l1p != '\0' && !isLetter(*l1p))
+                {
+                    ++l1p;
+                }
+
+                while (*l2p != '\0' && !isLetter(*l2p))
+                {
+                    ++l2p;
+                }
+            }
+        #endif  // CMP_LINES_WO_PUNCTUATION
+
         if (*l1p < *l2p)
         {
             return -1;
@@ -114,71 +162,52 @@ int normalComparison(const void* a, const void* b)
     }
 }
 
-//TODO: maybe optimize it: reverse lines, then call normalComparison
-int reversedComparison(const void* a, const void* b)
+/**
+ * @brief String line reverse
+ * 
+ * @param str 
+ * @param len 
+ */
+void my_strrev(char *str, int len)
+{
+    for (int i = 0, j = len - 1; i < j; ++i, --j)
+    {
+        int a = str[i];
+        str[i] = str[j];
+        str[j] = a;
+    }
+}
+
+/**
+ * @brief Wrapper for lines camparison in reversed order
+ * 
+ * @param a 
+ * @param b 
+ * @return int 
+ */
+int reversedLinesComparison(const void *a, const void *b)
 {
     text_lines_st *line1 = (text_lines_st *) a;
     text_lines_st *line2 = (text_lines_st *) b;
 
-    char *l1p = line1->beginning + line1->length - 1;
-    char *l2p = line2->beginning + line2->length - 1;
-    while (*l1p != *line1->beginning && *l2p != *line2->beginning)
-    {
-        if (*l1p < *l2p)
-        {
-            return -1;
-        }
-        else if (*l1p > *l2p)
-        {
-            return 1;
-        }
+    my_strrev(line1->beginning, line1->length);
+    my_strrev(line2->beginning, line2->length);
 
-        --l1p;
-        --l2p;
-    }
+    int res = directLinesComparison((void *) a, (void *)b);
 
-    if (*l1p == *line1->beginning && *l2p == *line2->beginning)
-    {
-        if (*l1p < *l2p)
-        {
-            return -1;
-        }
-        else if (*l2p < *l1p)
-        {
-            return 1;
-        }
-        else
-        {
-            return 0;
-        }
-    }
-    else if (*l1p == *line1->beginning)
-    {
-        if (*l1p <= *l2p)
-        {
-            return -1;
-        }
-        else
-        {
-            return 1;
-        }
-    }
-    else
-    {
-        if (*l2p <= *l1p)
-        {
-            return -1;
-        }
-        else
-        {
-            return 1;
-        }
-    }
+    my_strrev(line1->beginning, line1->length);
+    my_strrev(line2->beginning, line2->length);
+
+    return res;
 }
 
 
-/*
-TODO: own quick_sort
+/**
+ * @brief Swapping two lines structures
+ * 
+ * @param line1 
+ * @param line2 
+ */
 void swap(text_lines_st *line1, text_lines_st *line2)
 {
     text_lines_st temp = *line1;
@@ -186,6 +215,10 @@ void swap(text_lines_st *line1, text_lines_st *line2)
     *line2 = temp;
 }
 
+
+/*
+//TODO: own quick_sort
+//TODO: enum of comparison results
 int partition(text_lines_st *lines, int low, int high, int (*comp)(const void*, const void *))
 {
 	text_lines_st *pivot = &lines[high];
@@ -194,7 +227,7 @@ int partition(text_lines_st *lines, int low, int high, int (*comp)(const void*, 
 	for (int j = low; j <= high - 1; j++)
 	{
         int res = (*comp)((void *) &lines[j], (void *) &pivot);
-		if (res == -1)  //lines[j] < pivot)
+		if (res == -1)
 		{
 			i++;
 			swap(&lines[i], &lines[j]);

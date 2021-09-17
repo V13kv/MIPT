@@ -7,13 +7,7 @@
 #include "../include/lines.h"
 
 
-void destructor(text_lines_st *lines, text_st text, FILE *fs1, FILE *fs2)
-{
-    freeTextLinesObject(lines);
-    freeTextObject(text);
-    fclose(fs1);
-    fclose(fs2);
-}
+void destructor(text_lines_st *lines, text_st text, FILE *fs1, FILE *fs2);
 
 int main()
 {
@@ -29,8 +23,7 @@ int main()
     //printSeveralTextLines(lines, 5, text.lines_count);
 
     // Sort lines in lexicographic order
-    // TODO: my_qsort(lines, 0, text.lines_count, reversedComparison);
-    qsort(lines, text.lines_count, sizeof(text_lines_st), reversedComparison);  // normalComparison
+    qsort(lines, text.lines_count, sizeof(text_lines_st), directLinesComparison);  //my_qsort(lines, 0, text.lines_count, directLinesComparison);
 
     // Output sorted lines
     FILE *onegin_output_stream = fopen("../OneginOUTPUT.txt", "wb");
@@ -40,4 +33,20 @@ int main()
     destructor(lines, text, onegin_input_stream, onegin_output_stream);
 
     return 0;
+}
+
+/**
+ * @brief Destructor function (free's allocated memory&& closes file streams)
+ * 
+ * @param lines 
+ * @param text 
+ * @param fs1 
+ * @param fs2 
+ */
+void destructor(text_lines_st *lines, text_st text, FILE *fs1, FILE *fs2)
+{
+    freeTextLinesObject(lines);
+    freeTextObject(text);
+    fclose(fs1);
+    fclose(fs2);
 }
