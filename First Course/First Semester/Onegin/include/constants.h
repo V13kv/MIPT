@@ -2,6 +2,10 @@
 #define TEXT_CONSTANTS_H
 
 
+/**
+ * @brief Structure represents the text in a file
+ * 
+ */
 typedef struct 
 {
     char *const data;
