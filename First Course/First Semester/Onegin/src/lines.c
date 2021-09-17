@@ -58,10 +58,10 @@ void printSeveralTextLines(const text_line_st *const lines, const int lines_to_p
 }
 
 
-bool isLetter(const char chr)
+bool isLetter(char chr)
 {
     return  (chr >= 'A' && chr <= 'Z') || (chr >= 'a' && chr <= 'z') ||  // For english symbols
-            (chr >= 'ï¿½' && chr <= 'ï¿½') || (chr >= 'ï¿½' && chr <= 'ï¿½');    // For russian symbols
+            (chr >= 'À' && chr <= 'ß') || (chr >= 'à' && chr <= 'ÿ');    // For russian symbols
 }
 
 int directLinesComparison(const void *a, const void *b)
@@ -69,8 +69,8 @@ int directLinesComparison(const void *a, const void *b)
     assert(a != NULL && "[!] You have passed a null pointer as an 'a' parameter");
     assert(b != NULL && "[!] You have passed a null pointer as an 'b' parameter");
 
-    text_line_st *line1 = *(text_line_st * const *) a;
-    text_line_st *line2 = *(text_line_st * const *) b;
+    const text_line_st *line1 = (text_line_st *) a;
+    const text_line_st *line2 = (text_line_st *) b;
 
     char *l1p = line1->beginning;
     char *l2p = line2->beginning;
@@ -121,7 +121,7 @@ int directLinesComparison(const void *a, const void *b)
     }
 }
 
-void my_strrev(char *str, const int len)
+void my_strrev(char *str, int len)
 {
     assert(str != NULL && "[!] You have passed a null pointer as an 'str' parameter");
 
@@ -163,7 +163,8 @@ void swap(text_line_st *line1, text_line_st *line2)
     *line2 = temp;
 }
 
-int partition(text_line_st *lines, const int low, const int high, int (*comp)(const void*, const void *))
+
+int partition(text_line_st *lines, int low, int high, int (*comp)(const void*, const void *))
 {
 	text_line_st pivot = lines[high];
 	int i = low - 1;
@@ -180,7 +181,7 @@ int partition(text_line_st *lines, const int low, const int high, int (*comp)(co
 	return i + 1;
 }
 
-void my_qsort(text_line_st *lines, const int low, const int high, int (*comp)(const void *, const void *))
+void my_qsort(text_line_st *lines, int low, int high, int (*comp)(const void *, const void *))
 {
     assert(lines != NULL && "[!] You have passed a null pointer as a 'lines' parameter!");
     assert(comp != NULL && "[!] You have passed a null pointer as a 'comp' function!");
@@ -191,5 +192,19 @@ void my_qsort(text_line_st *lines, const int low, const int high, int (*comp)(co
 
         my_qsort(lines, low, partitioning_index - 1, comp);
 		my_qsort(lines, partitioning_index + 1, high, comp);
+    }
+}
+
+void bubbleSort(text_line_st *lines, int lines_count, int (*comp)(void const *, void const*))
+{
+    for (int i = 0; i < lines_count; ++i)
+    {
+        for (int j = i + 1; j < lines_count; ++j)
+        {
+            if ((*comp)((void *)&lines[j], (void *)&lines[i]) == -1)
+            {
+                swap(&lines[j], &lines[i]);
+            }
+        }
     }
 }

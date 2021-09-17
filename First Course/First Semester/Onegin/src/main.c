@@ -27,11 +27,12 @@ int main()
 
     // Split text buffer into string lines
     text_line_st *lines = getTextLinesObject(text);
+    //printSeveralTextLines(lines, 2, text.lines_count);
 
     // Sort lines in lexicographic order
-    printSeveralTextLines(lines, 2, text.lines_count);
+    bubbleSort(lines, text.lines_count, directLinesComparison);
     //my_qsort(lines, 0, text.lines_count, directLinesComparison);
-    qsort(lines, text.lines_count, sizeof(text_line_st), directLinesComparison);
+    //qsort(lines, text.lines_count, sizeof(text_line_st), directLinesComparison);
 
     // Output sorted lines
     FILE *onegin_output_stream = fopen("../OneginOUTPUT.txt", "w");
