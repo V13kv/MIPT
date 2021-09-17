@@ -62,7 +62,7 @@ void printSeveralTextLines(const text_line_st *const lines, const int lines_to_p
  * @return true 
  * @return false 
  */
-bool isLetter(const char chr);
+bool isLetter(char chr);
 
 /**
  * @brief Compare lines excluding punctuation
@@ -79,7 +79,7 @@ int directLinesComparison(const void* a, const void* b);
  * @param str 
  * @param len 
  */
-void my_strrev(char *str, const int len);
+void my_strrev(char *str, int len);
 
 /**
  * @brief Wrapper for lines camparison in reversed order
@@ -108,7 +108,7 @@ void swap(text_line_st *line1, text_line_st *line2);
  * @param comp 
  * @return int 
  */
-int partition(text_line_st *lines, const int low, const int high, int (*comp)(const void*, const void *));
+int partition(text_line_st *lines, int low, int high, int (*comp)(const void*, const void *));
 
 /**
  * @brief Quick sort algorithm implemented to sort lines structures
@@ -118,7 +118,15 @@ int partition(text_line_st *lines, const int low, const int high, int (*comp)(co
  * @param high 
  * @param comp 
  */
-void my_qsort(text_line_st *lines, const int low, const int high, int (*comp)(const void *, const void *));
+void my_qsort(text_line_st *lines, int low, int high, int (*comp)(const void *, const void *));
 
+/**
+ * @brief Simpmle bubble sort to test comparator and swap functions
+ * 
+ * @param lines 
+ * @param lines_count 
+ * @param comp 
+ */
+void bubbleSort(text_line_st *lines, int lines_count, int (*comp)(void const *, void const*));
 
 #endif  // LINES_H
