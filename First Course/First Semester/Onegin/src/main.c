@@ -6,8 +6,15 @@
 #include "../include/text.h"
 #include "../include/lines.h"
 
-
-void destructor(text_lines_st *lines, text_st text, FILE *fs1, FILE *fs2);
+/**
+ * @brief Destructor function (free's allocated memory&& closes file streams)
+ * 
+ * @param lines 
+ * @param text 
+ * @param fs1 
+ * @param fs2 
+ */
+void destructor(text_line_st *lines, text_st text, FILE *fs1, FILE *fs2);
 
 int main()
 {
@@ -19,14 +26,15 @@ int main()
     text_st text = getTextObject(onegin_input_stream);
 
     // Split text buffer into string lines
-    text_lines_st *lines = getTextLinesObject(text);
-    //printSeveralTextLines(lines, 5, text.lines_count);
+    text_line_st *lines = getTextLinesObject(text);
 
     // Sort lines in lexicographic order
-    qsort(lines, text.lines_count, sizeof(text_lines_st), directLinesComparison);  //my_qsort(lines, 0, text.lines_count, directLinesComparison);
+    printSeveralTextLines(lines, 2, text.lines_count);
+    //my_qsort(lines, 0, text.lines_count, directLinesComparison);
+    qsort(lines, text.lines_count, sizeof(text_line_st), directLinesComparison);
 
     // Output sorted lines
-    FILE *onegin_output_stream = fopen("../OneginOUTPUT.txt", "wb");
+    FILE *onegin_output_stream = fopen("../OneginOUTPUT.txt", "w");
     saveTextLinesObject(lines, text.lines_count, onegin_output_stream);
 
     // Close all opened files and free allocated memory
@@ -35,15 +43,7 @@ int main()
     return 0;
 }
 
-/**
- * @brief Destructor function (free's allocated memory&& closes file streams)
- * 
- * @param lines 
- * @param text 
- * @param fs1 
- * @param fs2 
- */
-void destructor(text_lines_st *lines, text_st text, FILE *fs1, FILE *fs2)
+void destructor(text_line_st *lines, text_st text, FILE *fs1, FILE *fs2)
 {
     freeTextLinesObject(lines);
     freeTextObject(text);
