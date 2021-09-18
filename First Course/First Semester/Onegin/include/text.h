@@ -10,7 +10,7 @@
  * @param fs 
  * @return text_st 
  */
-text_st getTextObject(FILE *fs);
+text_st* getTextObject(FILE *fs);
 
 /**
  * @brief Get the capacity of the text in the file
@@ -55,7 +55,7 @@ void printTextObject(text_st *text, int symbols_to_print);
  * 
  * @param text 
  */
-void freeTextObject(text_st text);
+void freeTextObject(text_st *text);
 
 
 #endif  // TEXT_H

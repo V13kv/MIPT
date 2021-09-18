@@ -26,7 +26,7 @@ typedef struct
  * @param text 
  * @return text_line_st* 
  */
-text_line_st* getTextLinesObject(text_st text);
+text_line_st* getTextLinesObject(text_st *text);
 
 /**
  * @brief Writing line objects to file
@@ -121,7 +121,7 @@ int partition(text_line_st *lines, int low, int high, int (*comp)(const void*, c
 void my_qsort(text_line_st *lines, int low, int high, int (*comp)(const void *, const void *));
 
 /**
- * @brief Simpmle bubble sort to test comparator and swap functions
+ * @brief Simple bubble sort to test comparator and swap functions
  * 
  * @param lines 
  * @param lines_count 
