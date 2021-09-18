@@ -6,41 +6,50 @@
 #include "../include/text.h"
 
 
-text_st* getTextObject(FILE *fs)
+void text_st_constructor(text_st *text, const char *file_path)
 {
-    assert(fs != NULL && "[!] You have passed a null pointer as a file stream!");
+    assert(text != NULL && "[!] You have passed a null pointer as a text_st structure!");
+    assert(file_path != NULL && "[!] You have passed a null pointer as a file_path parameter!");
+
+    // Open file
+    FILE *fs = fopen(file_path, "r");
+    assert(fs != NULL && "[!] Got a null pointer after fopen function!");
 
     // Get file capacity
-    const int file_capacity = getTextCapacity(fs);
-
+    const int file_capacity = get_text_capacity(fs);
+    
     // Get the text data as null-terminated string AND get the size of the text
     char *data = (char *) malloc(sizeof(char) * (file_capacity + 1));
     assert(data != NULL && "[!] Got a null pointer after malloc function!");
-
+    
     int size = fread(data, sizeof(char), file_capacity, fs);
     assert(ferror(fs) == 0 && "[!] There was an error during reading the file stream!");
     data[size] = '\0';
 
     // Get rid of empty lines
-    deleteEmptyLines(data);
+    delete_empty_lines(data);
 
     // Get text size
     size = strlen(data);
     assert(size != 0 && "[!] Got a null pointer after strlen function!");
 
     // Get total amount of non-empty lines
-    const int lines_count = getTotalAmountOfLines(data);
+    const int lines_count = get_total_amount_of_lines(data);
 
     // Change the \n character to \0 to interact with lines as null-terminated string
-    convertLinesToCStrings(data);
+    convert_lines_to_CStrings(data);
 
-    // Create a text structure
-    text_st text = {data, size, lines_count};
+    // Fill text structure
+    text->data = data;
+    text->size = size;
+    text->lines_count = lines_count;
+    
 
-    return &text;
+    // Free file stream object
+    fclose(fs);
 }
 
-int getTextCapacity(FILE *fs)
+int get_text_capacity(FILE *fs)
 {
     assert(fs != NULL && "[!] You have passed a null pointer as a file_stream!");
 
@@ -51,7 +60,7 @@ int getTextCapacity(FILE *fs)
     return fsize;
 }
 
-void deleteEmptyLines(char *text)
+void delete_empty_lines(char *text)
 {
     assert(text != NULL && "[!] You have passed a null pointer as a file stream!");
 
@@ -71,21 +80,9 @@ void deleteEmptyLines(char *text)
         ++read;
     }
     *write = '\0';
-
-    /*
-    if (*--write != '\n')
-    {
-        *write++ = '\n';
-        *write = '\0';
-    }
-    else
-    {
-        *write = '\0';
-    }
-    */
 }
 
-void convertLinesToCStrings(char *text)
+void convert_lines_to_CStrings(char *text)
 {
     assert(text != NULL && "[!] You have passed a null pointer as a file stream!");
 
@@ -99,7 +96,7 @@ void convertLinesToCStrings(char *text)
     }
 }
 
-int getTotalAmountOfLines(char *text)
+int get_total_amount_of_lines(char *text)
 {
     assert(text != NULL && "[!] You have passed a null pointer as a file stream!");
 
@@ -121,8 +118,10 @@ int getTotalAmountOfLines(char *text)
     return lines;
 }
 
-void printTextObject(text_st *text, int symbols_to_print)
+void print_text_object(text_st *text, int symbols_to_print)
 {
+    assert(text != NULL && "[!] You have passed a null pointer as a text_st structure!");
+    assert(text->data != NULL && "[!] text_st structure has text.data as a null pointer!");
     assert(symbols_to_print <= text->size && "[!] You are trying to print text symbols more than you have!");
 
     printf("text->size: %d\n", text->size);
@@ -142,7 +141,7 @@ void printTextObject(text_st *text, int symbols_to_print)
     putchar('\n');
 }
 
-void freeTextObject(text_st *text)
+void text_st_deconstructor(text_st *text)
 {
     free(text->data);
 }

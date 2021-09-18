@@ -1,54 +1,34 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <Windows.h>
+#include <Windows.h>  // only for SetConsoleOutputCP function
 
 #include "../include/text.h"
 #include "../include/lines.h"
 
-/**
- * @brief Destructor function (free's allocated memory&& closes file streams)
- * 
- * @param lines 
- * @param text 
- * @param fs1 
- * @param fs2 
- */
-void destructor(text_line_st *lines, text_st *text, FILE *fs1, FILE *fs2);
 
-//TODO: слишком дорогое копирование
 int main()
 {
     // For cyrillic support
     SetConsoleOutputCP(1251);
 
-    // Write the file data to the buffer and calculate the values we need 
-    FILE *onegin_input_stream = fopen("../Onegin.txt", "r");
-    text_st *text = getTextObject(onegin_input_stream);
+    // Create text object
+    text_st text = {0, 0, 0};
+    text_st_constructor(&text, "../Onegin.txt");
 
-    // Split text buffer into string lines
-    text_line_st *lines = getTextLinesObject(&text);
-    //printSeveralTextLines(lines, 2, text.lines_count);
+    // Get text lines
+    text_line_st *lines = get_text_lines(&text);
 
     // Sort lines in lexicographic order
-    bubbleSort(lines, text->lines_count, directLinesComparison);
-    //my_qsort(lines, 0, text.lines_count, directLinesComparison);
+    my_qsort(lines, 0, text.lines_count, directLinesComparison);
     //qsort(lines, text.lines_count, sizeof(text_line_st), directLinesComparison);
 
-    // Output sorted lines
-    FILE *onegin_output_stream = fopen("../OneginOUTPUT.txt", "w");
-    saveTextLinesObject(lines, text->lines_count, onegin_output_stream);
+    // Save sorted lines to files
+    export_text_line_objects(lines, text.lines_count, "../OneginOUTPUT.txt");
 
     // Close all opened files and free allocated memory
-    destructor(lines, &text, onegin_input_stream, onegin_output_stream);
+    text_st_deconstructor(&text);
+    free(lines);
 
     return 0;
-}
-
-void destructor(text_line_st *lines, text_st *text, FILE *fs1, FILE *fs2)
-{
-    freeTextLinesObject(lines);
-    freeTextObject(&text);
-    fclose(fs1);
-    fclose(fs2);
 }

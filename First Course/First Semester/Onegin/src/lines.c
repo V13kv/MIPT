@@ -7,13 +7,16 @@
 #include "../include/lines.h"
 
 
-text_line_st* getTextLinesObject(text_st *text)
+text_line_st* get_text_lines(text_st *text)
 {
-    // Allocate memory for each line of a text
+    // Error check
+    assert(text != NULL && "[!] You have passed a null pointer as a text_st structure!");
+
+    // Allocate memory for all lines
     text_line_st *lines = malloc(sizeof(text_line_st) * text->lines_count);
     assert(lines != NULL && "[!] Got a null pointer after malloc function!");
 
-    // Fill each line structure of the lines array
+    // Constructing lines
     char *text_p = text->data;
     assert(text_p != NULL && "[!] You have passed a null pointer as a text.data!");
 
@@ -28,27 +31,42 @@ text_line_st* getTextLinesObject(text_st *text)
     return lines;
 }
 
-void saveTextLinesObject(const text_line_st *const lines, const int count_lines, FILE *fs)
+void export_text_line_objects(const text_line_st *const lines, const int lines_count, const char *file_name)
 {
-    assert(fs != NULL && "[!] You have passed a null pointer as a file stream!");
+    // Create file_name file
+    FILE *fs = fopen(file_name, "w");
 
-    for (int line = 0; line < count_lines; ++line)
+    // Error check
+    assert(fs != NULL && "[!] You have passed a null pointer as a file stream!");
+    assert(lines != NULL && "[!] You have passed a null pointer as a lines array!");
+    for (int line = 0; line < lines_count; ++line)
+    {
+        assert(lines[line].beginning != NULL && "[!] text_line_st structure has lines[ind].beginning as a null pointer");
+    }
+    assert(lines_count > 0 && "[!] You have passed negative lines_count parameter!");
+
+    // Export
+    for (int line = 0; line < lines_count; ++line)
     {
         fwrite(lines[line].beginning, sizeof(char), lines[line].length, fs);
         fputc('\n', fs);
     }
-}
 
-void freeTextLinesObject(text_line_st *lines)
-{
-    free(lines);
+    // Cloes file stream object
+    fclose(fs);
 }
-
 
 void printSeveralTextLines(const text_line_st *const lines, const int lines_to_print, const int total_lines)
 {
+    // Error check
+    assert(lines != NULL && "[!] You have passed a null pointer as a lines array!");
+    for (int line = 0; line < lines_to_print; ++line)
+    {
+        assert(lines[line].beginning != NULL && "[!] text_line_st structure has lines[ind].beginning as a null pointer");
+    }
     assert(lines_to_print <= total_lines && "[!] You are trying to print lines more than you have!");
 
+    // Print lines
     putchar('\n');
     for (int line = 0; line < lines_to_print; ++line)
     {
@@ -66,6 +84,7 @@ bool isLetter(char chr)
 
 int directLinesComparison(const void *a, const void *b)
 {
+    // Error check
     assert(a != NULL && "[!] You have passed a null pointer as an 'a' parameter");
     assert(b != NULL && "[!] You have passed a null pointer as an 'b' parameter");
 
@@ -77,6 +96,7 @@ int directLinesComparison(const void *a, const void *b)
     assert(l1p != NULL && "[!] You have passed a null pointer as a line1->beginning!");
     assert(l2p != NULL && "[!] You have passed a null pointer as a line2->beginning");
 
+    // Compare line objects
     while (*l1p != '\0' && *l2p != '\0')
     {
         #ifdef CMP_LINES_WO_PUNCTUATION
@@ -121,10 +141,13 @@ int directLinesComparison(const void *a, const void *b)
     }
 }
 
-void my_strrev(char *str, int len)
+void my_strrev(char *const str, const int len)
 {
-    assert(str != NULL && "[!] You have passed a null pointer as an 'str' parameter");
+    // Error check
+    assert(str != NULL && "[!] You have passed a null pointer as an str parameter");
+    assert(len > 0 && "[!] You have passed negative number as an len parameter");
 
+    // String reversing
     for (int i = 0, j = len - 1; i < j; ++i, --j)
     {
         int a = str[i];
@@ -135,23 +158,28 @@ void my_strrev(char *str, int len)
 
 int reversedLinesComparison(const void *a, const void *b)
 {
+    // Error check
     assert(a != NULL && "[!] You have passed a null pointer as an 'a' parameter");
     assert(b != NULL && "[!] You have passed a null pointer as an 'b' parameter");
 
     text_line_st *line1 = (text_line_st *) a;
     text_line_st *line2 = (text_line_st *) b;
+    assert(line1->beginning != NULL && "[!] You have passed a null pointer as a line1->beginning!");
+    assert(line2->beginning != NULL && "[!] You have passed a null pointer as a line2->beginning");
 
+    // Lines reversing
     my_strrev(line1->beginning, line1->length);
     my_strrev(line2->beginning, line2->length);
 
-    int res = directLinesComparison((void *) a, (void *)b);
+    // Comparison
+    int res = directLinesComparison((const void *) line1, (const void *) line2);
 
+    // Reverse lines back
     my_strrev(line1->beginning, line1->length);
     my_strrev(line2->beginning, line2->length);
 
     return res;
 }
-
 
 void swap(text_line_st *line1, text_line_st *line2)
 {
@@ -164,39 +192,67 @@ void swap(text_line_st *line1, text_line_st *line2)
 }
 
 
-int partition(text_line_st *lines, int low, int high, int (*comp)(const void*, const void *))
+int partition(text_line_st *const lines, int low, int high, int (*comp)(const void*, const void *))
 {
+    // Error check
+    assert(lines != NULL && "[!] You have passed a null pointer as a lines parameter!");
+    assert(comp != NULL && "[!] You have passed a null pointer as a comp function!");
+    assert(low >= 0 && "[!] You have passed negative low parameter!");
+    assert(low <= high && "[!] low parameter is greater than high parameter!");
+
+    // Partitioning
 	text_line_st pivot = lines[high];
 	int i = low - 1;
 
 	for (int j = low; j <= high - 1; j++)
 	{
-		if ((*comp)((void *) &lines[j], (void *) &pivot) == FIRST_LINE_IS_LOWER)
+        cmp_results_et res = (*comp)((const void *) &lines[j], (const void *) &pivot);
+		if (res == CMP_FIRST_IS_LOWER)
 		{
 			i++;
 			swap(&lines[i], &lines[j]);
 		}
 	}
 	swap(&lines[i + 1], &lines[high]);
+
 	return i + 1;
+}
+
+void _my_qsort(text_line_st *lines, int low, int high, int (*comp)(const void *, const void *))
+{
+    if (low < high)
+    {
+        int part_index = partition(lines, low, high, comp);
+
+        _my_qsort(lines, low, part_index - 1, comp);
+		_my_qsort(lines, part_index + 1, high, comp);
+    }
 }
 
 void my_qsort(text_line_st *lines, int low, int high, int (*comp)(const void *, const void *))
 {
-    assert(lines != NULL && "[!] You have passed a null pointer as a 'lines' parameter!");
-    assert(comp != NULL && "[!] You have passed a null pointer as a 'comp' function!");
+    // Error check
+    assert(lines != NULL && "[!] You have passed a null pointer as a lines parameter!");
+    assert(comp != NULL && "[!] You have passed a null pointer as a comp function!");
+    assert(low >= 0 && "[!] You have passed negative low parameter!");
+    assert(low <= high && "[!] low parameter is greater than high parameter!");
 
-    if (low < high)
-    {
-        int partitioning_index = partition(lines, low, high, comp);
-
-        my_qsort(lines, low, partitioning_index - 1, comp);
-		my_qsort(lines, partitioning_index + 1, high, comp);
-    }
+    // Quick sort
+    _my_qsort(lines, low, --high, comp);
 }
 
 void bubbleSort(text_line_st *lines, int lines_count, int (*comp)(void const *, void const*))
 {
+    // Error checking
+    assert(lines != NULL && "[!] You have passed a null pointer as a lines array!");
+    for (int line = 0; line < lines_count; ++line)
+    {
+        assert(lines[line].beginning != NULL && "[!] text_line_st structure has lines[ind].beginning as a null pointer");
+    }
+    assert(lines_count <= lines_count && "[!] You are trying to print lines more than you have!");
+    assert(comp != NULL && "[!] You have passed a null pointer as a comp function!");
+
+    // Bubble sort
     for (int i = 0; i < lines_count; ++i)
     {
         for (int j = i + 1; j < lines_count; ++j)
