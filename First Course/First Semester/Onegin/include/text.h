@@ -28,7 +28,7 @@ void text_st_constructor(text_st *text, const char *file_path);
  * @param fs 
  * @return int 
  */
-int get_text_capacity(FILE *fs);
+int get_file_capacity(FILE *fs);
 
 /**
  * @brief Remove blank lines from a buffer
@@ -58,7 +58,7 @@ int get_total_amount_of_lines(char *text_data);
  * @param text 
  * @param symbols_to_print 
  */
-void print_text_object(text_st *text, int symbols_to_print);
+void text_st_print(text_st *text, int symbols_to_print);
 
 /**
  * @brief Free the memory allocated for the text of the file

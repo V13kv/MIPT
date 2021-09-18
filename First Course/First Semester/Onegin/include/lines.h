@@ -14,7 +14,7 @@ typedef enum CMP_RESULTS
 {
     CMP_FIRST_IS_LOWER = -1,
     CMP_ARE_EQUAL,
-    CMP_FIRST_IS_HIGHER
+    CMP_FIRST_IS_GREATER
 } cmp_results_et;
 
 /**
@@ -64,6 +64,13 @@ void printSeveralTextLines(const text_line_st *const lines, const int lines_to_p
 bool isLetter(const char chr);
 
 /**
+ * @brief Passing punctuation
+ * 
+ * @param str_p 
+ */
+void skip_letters(char **str_p);
+
+/**
  * @brief Compare lines excluding punctuation
  * 
  * @param a 
@@ -80,6 +87,7 @@ int directLinesComparison(const void* a, const void* b);
  */
 void my_strrev(char *const str, const int len);
 
+//FIXME: rewrite function without 4 strrev's
 /**
  * @brief Wrapper for lines camparison in reversed order
  * 
@@ -107,7 +115,7 @@ void swap(text_line_st *line1, text_line_st *line2);
  * @param comp 
  * @return int 
  */
-int partition(text_line_st *const lines, int low, int high, int (*comp)(const void*, const void *));
+int _partition(text_line_st *const lines, int low, int high, int (*comp)(const void*, const void *));
 
 /**
  * @brief Quick sort algorithm implemented to sort line structures
