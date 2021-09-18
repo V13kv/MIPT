@@ -16,7 +16,7 @@ void text_st_constructor(text_st *text, const char *file_path)
     assert(fs != NULL && "[!] Got a null pointer after fopen function!");
 
     // Get file capacity
-    const int file_capacity = get_text_capacity(fs);
+    const int file_capacity = get_file_capacity(fs);
     
     // Get the text data as null-terminated string AND get the size of the text
     char *data = (char *) malloc(sizeof(char) * (file_capacity + 1));
@@ -49,7 +49,7 @@ void text_st_constructor(text_st *text, const char *file_path)
     fclose(fs);
 }
 
-int get_text_capacity(FILE *fs)
+int get_file_capacity(FILE *fs)
 {
     assert(fs != NULL && "[!] You have passed a null pointer as a file_stream!");
 
@@ -118,7 +118,7 @@ int get_total_amount_of_lines(char *text)
     return lines;
 }
 
-void print_text_object(text_st *text, int symbols_to_print)
+void text_st_print(text_st *text, int symbols_to_print)
 {
     assert(text != NULL && "[!] You have passed a null pointer as a text_st structure!");
     assert(text->data != NULL && "[!] text_st structure has text.data as a null pointer!");

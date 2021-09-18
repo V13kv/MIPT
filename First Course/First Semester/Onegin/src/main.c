@@ -1,7 +1,10 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <Windows.h>  // only for SetConsoleOutputCP function
+
+#ifdef _WIN32
+    #include <Windows.h>  // only for SetConsoleOutputCP function
+#endif
 
 #include "../include/text.h"
 #include "../include/lines.h"
