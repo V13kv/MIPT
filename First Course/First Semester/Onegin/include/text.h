@@ -38,7 +38,7 @@ int get_text_capacity(FILE *fs);
 void delete_empty_lines(char *text);
 
 /**
- * @brief Converts lines ending in '\n' to C-string ending in '\0'
+ * @brief Converts lines ending in '\n' to C-strings ending in '\0'
  * 
  * @param text 
  */
