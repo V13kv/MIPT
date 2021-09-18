@@ -76,7 +76,7 @@ void printSeveralTextLines(const text_line_st *const lines, const int lines_to_p
 }
 
 
-bool isLetter(char chr)
+bool isLetter(const char chr)
 {
     return  (chr >= 'A' && chr <= 'Z') || (chr >= 'a' && chr <= 'z') ||  // For english symbols
             (chr >= 'À' && chr <= 'ß') || (chr >= 'à' && chr <= 'ÿ');    // For russian symbols
