@@ -40,7 +40,7 @@ text_line_st* get_text_lines(text_st *text);
  * 
  * @param lines 
  * @param count_lines 
- * @param fs 
+ * @param file_name 
  */
 void export_text_line_objects(const text_line_st *const lines, const int lines_count, const char *file_name);
 
@@ -61,7 +61,7 @@ void printSeveralTextLines(const text_line_st *const lines, const int lines_to_p
  * @return true 
  * @return false 
  */
-bool isLetter(char chr);
+bool isLetter(const char chr);
 
 /**
  * @brief Compare lines excluding punctuation
@@ -110,7 +110,7 @@ void swap(text_line_st *line1, text_line_st *line2);
 int partition(text_line_st *const lines, int low, int high, int (*comp)(const void*, const void *));
 
 /**
- * @brief Quick sort algorithm implemented to sort lines structures
+ * @brief Quick sort algorithm implemented to sort line structures
  * 
  * @param lines 
  * @param low 
@@ -120,7 +120,7 @@ int partition(text_line_st *const lines, int low, int high, int (*comp)(const vo
 void _my_qsort(text_line_st *lines, int low, int high, int (*comp)(const void *, const void *));
 
 /**
- * @brief Quick sort wrapper. Check for errors then call actual quick sort
+ * @brief Quick sort wrapper. Checks for errors then call actual quick sort
  * 
  * @param lines 
  * @param low 
@@ -130,7 +130,7 @@ void _my_qsort(text_line_st *lines, int low, int high, int (*comp)(const void *,
 void my_qsort(text_line_st *lines, int low, int high, int (*comp)(const void *, const void *));
 
 /**
- * @brief Simple bubble sort to test comparator and swap functions
+ * @brief Bubble sort to test comparator and swap functions
  * 
  * @param lines 
  * @param lines_count 
