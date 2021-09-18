@@ -7,17 +7,17 @@
 #include "../include/lines.h"
 
 
-text_line_st* getTextLinesObject(text_st text)
+text_line_st* getTextLinesObject(text_st *text)
 {
     // Allocate memory for each line of a text
-    text_line_st *lines = malloc(sizeof(text_line_st) * text.lines_count);
+    text_line_st *lines = malloc(sizeof(text_line_st) * text->lines_count);
     assert(lines != NULL && "[!] Got a null pointer after malloc function!");
 
     // Fill each line structure of the lines array
-    char *text_p = text.data;
+    char *text_p = text->data;
     assert(text_p != NULL && "[!] You have passed a null pointer as a text.data!");
 
-    for (int line = 0; line < text.lines_count; ++line)
+    for (int line = 0; line < text->lines_count; ++line)
     {
         lines[line].beginning = text_p;
         lines[line].length = strlen(text_p);

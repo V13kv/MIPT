@@ -6,7 +6,7 @@
 #include "../include/text.h"
 
 
-text_st getTextObject(FILE *fs)
+text_st* getTextObject(FILE *fs)
 {
     assert(fs != NULL && "[!] You have passed a null pointer as a file stream!");
 
@@ -37,7 +37,7 @@ text_st getTextObject(FILE *fs)
     // Create a text structure
     text_st text = {data, size, lines_count};
 
-    return text;
+    return &text;
 }
 
 int getTextCapacity(FILE *fs)
@@ -142,7 +142,7 @@ void printTextObject(text_st *text, int symbols_to_print)
     putchar('\n');
 }
 
-void freeTextObject(text_st text)
+void freeTextObject(text_st *text)
 {
-    free(text.data);
+    free(text->data);
 }
