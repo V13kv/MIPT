@@ -3,12 +3,19 @@
 
 
 #define CMP_LINES_WO_PUNCTUATION  // Used to exclude punctuation from lines comparison functions (comment/uncomment)
-#define FIRST_LINE_IS_LOWER -1  // my_qsort comparator a < b result (in human readable format)
 
 #include <stdio.h>
 #include <stdbool.h>
 
-#include "../include/constants.h"
+#include "../include/text.h"
+
+
+typedef enum CMP_RESULTS
+{
+    CMP_FIRST_IS_LOWER = -1,
+    CMP_ARE_EQUAL,
+    CMP_FIRST_IS_HIGHER
+} cmp_results_et;
 
 /**
  * @brief Structure represents each line of the text in a file
@@ -26,7 +33,7 @@ typedef struct
  * @param text 
  * @return text_line_st* 
  */
-text_line_st* getTextLinesObject(text_st *text);
+text_line_st* get_text_lines(text_st *text);
 
 /**
  * @brief Writing line objects to file
@@ -35,15 +42,7 @@ text_line_st* getTextLinesObject(text_st *text);
  * @param count_lines 
  * @param fs 
  */
-void saveTextLinesObject(const text_line_st *const lines, const int count_lines, FILE *fs);
-
-/**
- * @brief Free the memory allocated for the lines of the file
- * 
- * @param lines 
- */
-void freeTextLinesObject(text_line_st *lines);
-
+void export_text_line_objects(const text_line_st *const lines, const int lines_count, const char *file_name);
 
 /**
  * @brief Printing 'lines_to_print' lines from the beginning of the text
@@ -79,7 +78,7 @@ int directLinesComparison(const void* a, const void* b);
  * @param str 
  * @param len 
  */
-void my_strrev(char *str, int len);
+void my_strrev(char *const str, const int len);
 
 /**
  * @brief Wrapper for lines camparison in reversed order
@@ -108,10 +107,20 @@ void swap(text_line_st *line1, text_line_st *line2);
  * @param comp 
  * @return int 
  */
-int partition(text_line_st *lines, int low, int high, int (*comp)(const void*, const void *));
+int partition(text_line_st *const lines, int low, int high, int (*comp)(const void*, const void *));
 
 /**
  * @brief Quick sort algorithm implemented to sort lines structures
+ * 
+ * @param lines 
+ * @param low 
+ * @param high 
+ * @param comp 
+ */
+void _my_qsort(text_line_st *lines, int low, int high, int (*comp)(const void *, const void *));
+
+/**
+ * @brief Quick sort wrapper. Check for errors then call actual quick sort
  * 
  * @param lines 
  * @param low 
@@ -128,5 +137,6 @@ void my_qsort(text_line_st *lines, int low, int high, int (*comp)(const void *, 
  * @param comp 
  */
 void bubbleSort(text_line_st *lines, int lines_count, int (*comp)(void const *, void const*));
+
 
 #endif  // LINES_H
