@@ -82,11 +82,11 @@ bool isLetter(const char chr)
             (chr >= 'À' && chr <= 'ß') || (chr >= 'à' && chr <= 'ÿ');    // For russian symbols
 }
 
-void skip_letters(char **str_p)
+void skip_letters(char **str_p, cmp_options_et cmp_option)
 {
     while (**str_p != '\0' && !isLetter(**str_p))
     {
-        ++(*str_p);
+        *str_p = *str_p + cmp_option;
     }
 }
 
@@ -110,8 +110,8 @@ int directLinesComparison(const void *a, const void *b)
         #ifdef CMP_LINES_WO_PUNCTUATION
             if (!isLetter(*l1p) || !isLetter(*l2p))
             {
-                skip_letters(&l1p);
-                skip_letters(&l2p);
+                skip_letters(&l1p, CMP_OPTIONS_DIRECT);
+                skip_letters(&l2p, CMP_OPTIONS_DIRECT);
             }
         #endif  // CMP_LINES_WO_PUNCTUATION
 
@@ -142,21 +142,6 @@ int directLinesComparison(const void *a, const void *b)
     }
 }
 
-void my_strrev(char *const str, const int len)
-{
-    // Error check
-    assert(str != NULL && "[!] You have passed a null pointer as an str parameter");
-    assert(len > 0 && "[!] You have passed negative number as an len parameter");
-
-    // String reversing
-    for (int i = 0, j = len - 1; i < j; ++i, --j)
-    {
-        int a = str[i];
-        str[i] = str[j];
-        str[j] = a;
-    }
-}
-
 int reversedLinesComparison(const void *a, const void *b)
 {
     // Error check
@@ -172,13 +157,13 @@ int reversedLinesComparison(const void *a, const void *b)
     assert(l2p != NULL && "[!] You have passed a null pointer as a line2->beginning");
 
     // Compare line objects
-    while (*l1p != line1->beginning && *l2p != line2->beginning)
+    while (l1p != line1->beginning && l2p != line2->beginning)
     {
         #ifdef CMP_LINES_WO_PUNCTUATION
             if (!isLetter(*l1p) || !isLetter(*l2p))
             {
-                skip_letters(&l1p);
-                skip_letters(&l2p);
+                skip_letters(&l1p, CMP_OPTIONS_REVERSED);
+                skip_letters(&l2p, CMP_OPTIONS_REVERSED);
             }
         #endif  // CMP_LINES_WO_PUNCTUATION
 
@@ -195,11 +180,11 @@ int reversedLinesComparison(const void *a, const void *b)
         --l2p;
     }
 
-    if (*l1p == line1->beginning && *l2p == line2->beginning)
+    if (l1p == line1->beginning && l2p == line2->beginning)
     {
         return CMP_ARE_EQUAL;
     }
-    else if (*l1p == line1->beginning)
+    else if (l1p == line1->beginning)
     {
         return CMP_FIRST_IS_LOWER;
     }
@@ -219,15 +204,6 @@ void swap(text_line_st *line1, text_line_st *line2)
     *line2 = temp;
 }
 
-/**
- * @brief Part of a my_qsort (quick sort) algorithm
- * 
- * @param lines 
- * @param low 
- * @param high 
- * @param comp 
- * @return int 
- */
 int _partition(text_line_st *const lines, int low, int high, int (*comp)(const void*, const void *))
 {
     // Error check
@@ -254,14 +230,6 @@ int _partition(text_line_st *const lines, int low, int high, int (*comp)(const v
 	return i + 1;
 }
 
-/**
- * @brief Quick sort algorithm implemented to sort line structures
- * 
- * @param lines 
- * @param low 
- * @param high 
- * @param comp 
- */
 void _my_qsort(text_line_st *lines, int low, int high, int (*comp)(const void *, const void *))
 {
     if (low < high)

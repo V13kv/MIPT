@@ -12,8 +12,10 @@
 
 int main()
 {
-    // For cyrillic support
-    SetConsoleOutputCP(1251);
+    #ifdef _WIN32
+        // For cyrillic support
+        SetConsoleOutputCP(1251);
+    #endif
 
     // Create text object
     text_st text = {0, 0, 0};
