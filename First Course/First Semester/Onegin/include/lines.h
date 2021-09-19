@@ -17,6 +17,12 @@ typedef enum CMP_RESULTS
     CMP_FIRST_IS_GREATER
 } cmp_results_et;
 
+typedef enum CMP_OPTIONS
+{
+    CMP_OPTIONS_REVERSED = -1,
+    CMP_OPTIONS_DIRECT = 1
+} cmp_options_et;
+
 /**
  * @brief Structure represents each line of the text in a file
  * 
@@ -68,7 +74,7 @@ bool isLetter(const char chr);
  * 
  * @param str_p 
  */
-void skip_letters(char **str_p);
+void skip_letters(char **str_p, cmp_options_et cmp_option);
 
 /**
  * @brief Compare lines excluding punctuation
@@ -80,15 +86,6 @@ void skip_letters(char **str_p);
 int directLinesComparison(const void* a, const void* b);
 
 /**
- * @brief String line reverse
- * 
- * @param str 
- * @param len 
- */
-void my_strrev(char *const str, const int len);
-
-//FIXME: rewrite function without 4 strrev's
-/**
  * @brief Wrapper for lines camparison in reversed order
  * 
  * @param a 
@@ -96,7 +93,6 @@ void my_strrev(char *const str, const int len);
  * @return int 
  */
 int reversedLinesComparison(const void *a, const void *b);
-
 
 /**
  * @brief Swapping two lines structures
