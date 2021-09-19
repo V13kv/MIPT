@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 
+//TODO: craete file.h and combine text.h and lines.h
+
 /**
  * @brief Structure represents the text in a file
  * 
@@ -10,9 +12,9 @@
 typedef struct 
 {
     char *data;
-    int size;
+    size_t size;
     int lines_count;
-} text_st;
+} text_st;  // TODO: buffer_st, text_st, text_line_st embedded structures (one structure)
 
 /**
  * @brief Get a text structure representing the text of the file with the calculated values (see text_st structure)
@@ -58,7 +60,7 @@ int get_total_amount_of_lines(char *text_data);
  * @param text 
  * @param symbols_to_print 
  */
-void text_st_print(text_st *text, int symbols_to_print);
+void text_st_print(text_st *text, size_t symbols_to_print);
 
 /**
  * @brief Free the memory allocated for the text of the file

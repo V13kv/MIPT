@@ -30,7 +30,7 @@ typedef enum CMP_OPTIONS
 typedef struct
 {
     char *beginning;
-    int length;
+    size_t length;
 } text_line_st;
 
 /**
@@ -101,27 +101,6 @@ int reversedLinesComparison(const void *a, const void *b);
  * @param line2 
  */
 void swap(text_line_st *line1, text_line_st *line2);
-
-/**
- * @brief Part of a my_qsort (quick sort) algorithm
- * 
- * @param lines 
- * @param low 
- * @param high 
- * @param comp 
- * @return int 
- */
-int _partition(text_line_st *const lines, int low, int high, int (*comp)(const void*, const void *));
-
-/**
- * @brief Quick sort algorithm implemented to sort line structures
- * 
- * @param lines 
- * @param low 
- * @param high 
- * @param comp 
- */
-void _my_qsort(text_line_st *lines, int low, int high, int (*comp)(const void *, const void *));
 
 /**
  * @brief Quick sort wrapper. Checks for errors then call actual quick sort
