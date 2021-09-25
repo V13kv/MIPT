@@ -1,35 +1,24 @@
 #include <stdio.h>
-#include "assert.h"
+#include <stdlib.h>
 
 #include "../include/stack.h"
 
 
-int main()
+int main(void)
 {
-    // Stack construction
     stack_t stack = {};
-    stackCtor(&stack);
+    IS_OK(stackCtor(&stack, 8));
 
-    stackPrint(&stack);
-    for (int i = 0; i < 9; ++i)
+    for (int i = 0; i < 8; ++i)
     {
-        stackPush(&stack, i*2 + 1);
-    }
-    stackPrint(&stack);
-
-    for (int i = 8; i > 5; --i)
-    {
-        stackPop(&stack);
-    }
-    stackPrint(&stack);
-
-    for (int i = 0; i < 100; ++i)
-    {
-        stackPop(&stack);
+        IS_OK(stackPush(&stack, i));
     }
 
-    // Stack destructor
-    stackDtor(&stack);
+    stackDump(&stack);
+    stackReallocation(NULL, REALLOC_MODES::INCREASE);
+
+    IS_OK(stackDtor(&stack));
+
 
     return 0;
 }

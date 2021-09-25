@@ -1,58 +1,74 @@
-#include <assert.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
+#include <stdlib.h>
 
 #include "../include/stack.h"
+#include "../include/settings.h"
 
-
-bool stackOK(const stack_t *stack)
+bool isStackOk(stack_t *stack)
 {
-    return  stack != NULL &&
-            stack->data != NULL &&
-            stack->capacity >= minStackCapacity &&
-            stack->size >= 0 &&
-            stack->size <= stack->capacity;
+    return  stack != NULL && stack->data != NULL &&
+            stack->size >= 0 && stack->size <= stack->capacity;
 }
 
-void stackCtor(stack_t *stack)
+EXIT_CODES stackCtor(stack_t *stack, int stack_capacity)
 {
-    assert(stack != NULL && stack->data == NULL && stack->size == POISON && stack->capacity == POISON);
+    if (stack == NULL || stack->capacity != -1 || stack->size != -1)
+    {
+        PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::OLD_STACK_PASSED);
+        return EXIT_CODES::OLD_STACK_PASSED;
+    }
 
-    // Fill the stack structure
-    stack->data = (stackElem_t *) calloc(minStackCapacity, sizeof(stackElem_t));
-    assert(stack->data != NULL && "[!] Got a NULL pointer after calloc function!\n");
+    stack->data = (stackElem_t *) calloc(stack_capacity, sizeof(stackElem_t));
+    if (stack->data == NULL)
+    {
+        PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_STD_FUNC_RESULT);
+        return EXIT_CODES::BAD_STD_FUNC_RESULT;
+    }
 
-    stack->capacity = minStackCapacity;
+    stack->capacity = stack_capacity;
     stack->size = 0;
+
+    return EXIT_CODES::NO_ERRORS;
 }
 
-int getNewReallocationCapacity(stack_t *stack, stack_realloc_mode mode)
+EXIT_CODES getNewReallocationCapacity(stack_t *stack, REALLOC_MODES mode, int *new_capacity)
 {
-    assert(stackOK(stack));
+    STACK_VERIFY(stack);
 
     switch (mode)
     {
-        case REALLOC_MODE_DECREASE:
-            return stack->capacity / stackReallocCoefficient * sizeof(stackElem_t);
-        case REALLOC_MODE_INCREASE:
-            return stack->capacity * stackReallocCoefficient * sizeof(stackElem_t);
+        case REALLOC_MODES::DECREASE:
+            *new_capacity = stack->capacity / stackReallocCoefficient * sizeof(stackElem_t);
+            break;
+        case REALLOC_MODES::INCREASE:
+            *new_capacity = stack->capacity * stackReallocCoefficient * sizeof(stackElem_t);
+            break;
         default:
-            assert(0 && "[!] You haven't passed mode parameter to _getNewReallocationCapacity function!\n");
-            return -1;
+            return EXIT_CODES::BAD_REALLOC_MODE_PASSED;
     }
+
+    return EXIT_CODES::NO_ERRORS;
 }
 
-void stackReallocation(stack_t *stack, stack_realloc_mode mode)
+EXIT_CODES stackReallocation(stack_t *stack, REALLOC_MODES mode)
 {
-    assert(stackOK(stack));
+    STACK_VERIFY(stack);
 
-    // Reallocation
-    stackElem_t *temp = (stackElem_t *) realloc(stack->data, getNewReallocationCapacity(stack, mode));
-    assert(temp != NULL && "[!] Got a NULL pointer after realloc function!\n");
+    // Get new reallocation capacity
+    int new_capacity = 0;
+    IS_OK(getNewReallocationCapacity(stack, mode, &new_capacity));
+
+    stackElem_t *temp = (stackElem_t *) realloc(stack->data, new_capacity);
+    if (temp == NULL)
+    {
+        PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_STD_FUNC_RESULT);
+        return EXIT_CODES::BAD_STD_FUNC_RESULT;
+    }
 
     // Update structure variables
     stack->data = temp;
-    if (mode == REALLOC_MODE_DECREASE)
+    if (mode == REALLOC_MODES::DECREASE)
     {
         stack->capacity = stack->capacity / stackReallocCoefficient;
     }
@@ -60,57 +76,97 @@ void stackReallocation(stack_t *stack, stack_realloc_mode mode)
     {
         stack->capacity = stackReallocCoefficient * stack->capacity;
     }
+
+    return EXIT_CODES::NO_ERRORS;
 }
 
-void stackPush(stack_t *stack, stackElem_t value)
+EXIT_CODES stackPush(stack_t *stack, stackElem_t value)
 {
-    assert(stackOK(stack));
+    STACK_VERIFY(stack);
 
-    // Stack push
     if (stack->size == stack->capacity)
     {
-        stackReallocation(stack, REALLOC_MODE_INCREASE);
+        IS_OK(stackReallocation(stack, REALLOC_MODES::INCREASE));
     }
+
     stack->data[stack->size++] = value;
 
-    assert(stackOK(stack));
+    return EXIT_CODES::NO_ERRORS;
 }
 
-stackElem_t stackPop(stack_t *stack)
+EXIT_CODES stackPop(stack_t *stack, stackElem_t *popTo)
 {
-    assert(stackOK(stack) && stack->size > 0);
-
-    // Stack pop
-    if (2 * stack->size < stack->capacity)
+    STACK_VERIFY(stack);
+    if (stack->size < 1)
     {
-        stackReallocation(stack, REALLOC_MODE_DECREASE);
+        PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_STACK_PASSED);
+        return EXIT_CODES::BAD_STACK_PASSED;
     }
 
-    stackElem_t value = stack->data[--stack->size];
-    stack->data[stack->size + 1] = 0;
-
-    return value;
-}
-
-void stackPrint(stack_t *stack)
-{
-    assert(stackOK(stack));
-
-    // Print information
-    printf("\nStack capacity = %d\n", stack->capacity);
-    printf("Stack size = %d\n", stack->size);
-    for (int elem = 0; elem < stack->size; ++elem)
+    if (stackReallocCoefficient * stack->size < stack->capacity)
     {
-        printf("#%d -> %d\n", elem + 1, stack->data[elem]);
+        IS_OK(stackReallocation(stack, REALLOC_MODES::DECREASE));
     }
+
+    *popTo = stack->data[stack->size--];
+    stack->data[stack->size + 1] = 0;  // FIXME: change 'poisonous' value
+
+    return EXIT_CODES::NO_ERRORS;
 }
 
-void stackDtor(stack_t *stack)
+#if defined STACK_DEBUG_MODE && STACK_DEBUG_MODE == 2
+EXIT_CODES stackDump(stack_t *stack)
 {
-    assert(stackOK(stack));
+    if (stack == NULL)
+    {
+        PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_STACK_PASSED);
+        return EXIT_CODES::BAD_STACK_PASSED;
+    }
 
-    // Free allocated memory
+    fprintf(DEFAULT_ERROR_TRACING_STREAM, YELLOW"[DEBUG_INFO, %s %s]"RESET":\n", __DATE__, __TIME__);
+    fprintf(DEFAULT_ERROR_TRACING_STREAM, "stack<%s> [0x%p] %s ", STRINGIFY(stackElem_t), stack, STRINGIFY(stack));
+    fprintf(DEFAULT_ERROR_TRACING_STREAM, "from %s(%d), %s():\n", __FILE__, __LINE__, __func__);
+
+    fprintf(DEFAULT_ERROR_TRACING_STREAM, "{\n");
+
+    fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\tcapacity = %d (%s)\n", stack->capacity, VALUE_CODE_TO_STR(stack->capacity >= 0));
+    fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\tsize = %d (%s)\n",
+            stack->size, VALUE_CODE_TO_STR(stack->size <= stack->capacity && stack->size >= 0));
+    fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\tdata[0x%p]\n", stack->data);
+
+    if (stack->size > 0)
+    {
+        fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\t{\n");
+
+        for (int element = 0; element < 10; ++element)
+        {
+            if (stack->data[element] != 0)  // FIXME: change 'poisonous' value
+            {
+                fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\t\t *[%d] = %d\n", element, stack->data[element]);
+            }
+            else
+            {
+                fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\t\t [%d] = %d (NOT USED)\n", element, stack->data[element]);
+            }
+        }
+
+        fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\t\t...\n\t\t}\n");
+    }
+
+    fprintf(DEFAULT_ERROR_TRACING_STREAM, "}\n");
+
+    return EXIT_CODES::NO_ERRORS;
+}
+#endif
+
+EXIT_CODES stackDtor(stack_t *stack)
+{
+    STACK_VERIFY(stack);
+
     free(stack->data);
+    stack->data = NULL;
     stack->capacity = -1;
     stack->size = -1;
+
+    return EXIT_CODES::NO_ERRORS;
 }
