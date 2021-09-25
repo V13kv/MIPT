@@ -1,12 +1,14 @@
-#ifndef SETTINGS_H
-#define SETTINGS_H
+#ifndef STACK_SETTINGS_H
+#define STACK_SETTINGS_H
 
-#define STACK_DEBUG_MODE
+
+//#define STACK_DEBUG_MODE 1  // Minimal debug info (only messages are shown)
+//#define STACK_DEBUG_MODE 2  // Maximum debug info (messages and dumps are shown)
+
+#define DEFAULT_ERROR_TRACING_STREAM stderr
 
 #define stackElem_t                 int
-#define minStackCapacity            8
 #define stackReallocCoefficient     2
-#define POISON                      -663  
 
 
-#endif  // SETTINGS_H
+#endif  // STACK_SETTINGS_H
