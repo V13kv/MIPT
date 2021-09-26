@@ -82,7 +82,7 @@ inline bool isLetter(const char chr)
 {
     //return isalpha(chr);
     return  (chr >= 'A' && chr <= 'Z') || (chr >= 'a' && chr <= 'z') ||  // For english symbols
-            (chr >= 'À' && chr <= 'ß') || (chr >= 'à' && chr <= 'ÿ');    // For russian symbols
+            (chr >= 'Ã€' && chr <= 'ÃŸ') || (chr >= 'Ã ' && chr <= 'Ã¿');    // For russian symbols
 }
 
 void skip_letters(char **str, cmp_options_et cmp_option)
