@@ -14,7 +14,7 @@
 
     // Enable/disable canary
     //#define STACK_CANARY        0
-    //#define STACK_CANARY        1
+    #define STACK_CANARY        1
 
     #if defined(STACK_CANARY) && STACK_CANARY == 1
         #define LEFT_CANARY_SIZE    sizeof(stackElem_t)

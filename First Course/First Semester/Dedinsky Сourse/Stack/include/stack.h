@@ -15,7 +15,8 @@ enum class STACK_EXIT_CODES
     BAD_STACK_SIZE,
     PASSED_STACK_IS_NULLPTR,
     BAD_REALLOC_MODE_PASSED,
-    STACK_CANARY_IS_DAMAGED
+    STACK_DATA_CANARY_IS_DAMAGED,
+    STACK_STRUCTURE_CANARY_IS_DAMAGED
 };
 
 enum class REALLOC_MODES
@@ -26,9 +27,21 @@ enum class REALLOC_MODES
 
 struct stack_t
 {
+    #if defined(STACK_CANARY) && STACK_CANARY == 1
+        const int canaryLeft = CANARY_VALUE;
+    #endif
+
     stackElem_t *data = NULL;
     int capacity = -1;
     int size = -1;
+
+    #if defined(STACK_CANARY) && STACK_CANARY == 1
+        const int canaryRight = CANARY_VALUE;
+    #endif
+
+    #if defined(STACK_HASH) && STACK_HASH == 1
+        long long int hashSum = 0;
+    #endif
 };
 
 #if defined(STACK_DEBUG_LEVEL) && STACK_DEBUG_LEVEL == 2
