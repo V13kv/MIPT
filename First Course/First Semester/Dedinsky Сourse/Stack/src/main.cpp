@@ -8,7 +8,7 @@ int main(void)
     stack_t stack = {};
     IS_OK_W_EXIT(stackCtor(&stack, 8));
     
-    for (int i = 0; i < 9; ++i)
+    for (int i = 0; i < 1024; ++i)
     {
         IS_OK_W_EXIT(stackPush(&stack, i));
     }

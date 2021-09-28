@@ -18,16 +18,69 @@ bool stackOk(stack_t *stack)
         // Error check
         OBJECT_VERIFY(stack);
 
+        // Stack structure canary check
+        if (stack->canaryLeft != CANARY_VALUE || stack->canaryRight != CANARY_VALUE)
+        {
+            PRINT_ERROR_TRACING_MESSAGE(STACK_EXIT_CODES::STACK_STRUCTURE_CANARY_IS_DAMAGED);
+            return EXIT_CODES::BAD_OBJECT_PASSED;
+        }
+
+        // Stack data canary check
         // FIXME: stack->data pointer can be changed to different location!
         if ( *(stack->data - 1) != CANARY_VALUE || stack->data[stack->capacity] != CANARY_VALUE)
         {
-            PRINT_ERROR_TRACING_MESSAGE(STACK_EXIT_CODES::STACK_CANARY_IS_DAMAGED);
+            PRINT_ERROR_TRACING_MESSAGE(STACK_EXIT_CODES::STACK_DATA_CANARY_IS_DAMAGED);
             return EXIT_CODES::BAD_OBJECT_PASSED;
         }
 
         return EXIT_CODES::NO_ERRORS;
     }
     
+#endif
+
+//TODO: think of implementing comparison between saved hashSum and hashSum after lib function is done
+#if defined(STACK_HASH) && STACK_HASH == 1  
+
+    EXIT_CODES hashCheck(stack_t *stack)
+    {
+        // Error check
+        OBJECT_VERIFY(stack);
+
+        // HashSum check
+        //FIXME: hashSum can be easily changed
+        if (stack->hashSum == )
+    }
+
+    /*
+    EXIT_CODES stackDataHashSum(stack_t *stack, long long int *tempHashSum)
+    {
+        // Error check
+        OBJECT_VERIFY(stack);
+
+        // Calculation
+        *tempHashSum += (&stack->data[stack->size] - &stack->data[0]) * sizeof(stackElem_t);
+    }
+    */
+
+    EXIT_CODES hashSumCtor(stack_t *stack)
+    {
+        // Error check
+        OBJECT_VERIFY(stack);
+
+        // Calculation
+        stack->hashSum += sizeof(stack->data) + sizeof(stack->capacity) + sizeof(stack->size)
+
+        #if defined(STACK_CANARY) && STACK_CANARY == 1
+            stack->hashSum += sizeof(stack->canaryLeft) + sizeof(stack->canaryRight);
+        #endif
+
+        return EXIT_CODES::NO_ERRORS;
+
+        //temp += (&stack->data[stack->size] - &stack->data[0]) * sizeof(stackElem_t);  // Hash sum of stack->data field
+        //IS_OK_W_EXIT(stackDataHashSum(stack, &temp));
+        
+    }
+
 #endif
 
 EXIT_CODES sprayPoison(stack_t *stack)
@@ -44,7 +97,7 @@ EXIT_CODES sprayPoison(stack_t *stack)
     return EXIT_CODES::NO_ERRORS;
 }
 
-//TODO: hash sum
+//TODO: do hash sum
 EXIT_CODES stackCtor(stack_t *stack, int stack_capacity)
 {
     // Error check
@@ -60,12 +113,15 @@ EXIT_CODES stackCtor(stack_t *stack, int stack_capacity)
         return EXIT_CODES::BAD_OBJECT_PASSED;
     }
 
+    /*
     //TODO: implementation of hash sum protection (sizeof largest variable to calculate sum)
+    #if defined(STACK_HASH) && STACK_HASH == 1
+        stack->data = (stackElem_t *) malloc(stack_capacity * sizeof(stackElem_t) + sizeof(stack->hashSum));
+        IS_OK_W_EXIT(hashSumCtor(stack));
+    #endif
+
     // Allocate memory for the stack
     #if defined(STACK_CANARY) && STACK_CANARY == 1
-        #if defined(STACK_HASH) && STACK_HASH == 1
-            stack->data = (stackElem_t *) malloc(stack_capacity * sizeof(stackElem_t) + sizeof());
-        #endif
         stack->data = (stackElem_t *) malloc(LEFT_CANARY_SIZE + stack_capacity * sizeof(stackElem_t) + RIGHT_CANARY_SIZE);
         stack->data[0] = CANARY_VALUE;
         stack->data[stack_capacity + 1] = CANARY_VALUE;
@@ -74,12 +130,38 @@ EXIT_CODES stackCtor(stack_t *stack, int stack_capacity)
     #else
         stack->data = (stackElem_t *) malloc(stack_capacity * sizeof(stackElem_t));
     #endif
+    */
 
+    // Protection bytes for hashSum field
+    int protection_capacity_increse = 0;
+    #if defined(STACK_HASH) && STACK_HASH == 1
+        protection_capacity_increse += sizeof(stack->hashSum);
+    #endif
+    
+    // Protection bytes for canary fields
+    #if defined(STACK_CANARY) && STACK_CANARY == 1
+        protection_capacity_increse += (LEFT_CANARY_SIZE + RIGHT_CANARY_SIZE);
+    #endif
+
+    // Memory allocation (for stack elements)
+    stack->data = (stackElem_t *) malloc(stack_capacity * sizeof(stackElem_t) + protection_capacity_increse);
     if (stack->data == NULL)
     {
         PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_STD_FUNC_RESULT);
         return EXIT_CODES::BAD_STD_FUNC_RESULT;
     }
+
+    // Construct/prepare hasSum field
+    #if defined(STACK_HASH) && STACK_HASH == 1
+        IS_OK_W_EXIT(hashSumCtor(stack));
+    #endif
+
+    // Construct/prepare canary fields
+    #if defined(STACK_CANARY) && STACK_CANARY == 1
+        stack->data[0] = CANARY_VALUE;
+        stack->data[stack_capacity + 1] = CANARY_VALUE;
+        stack->data++;
+    #endif
 
     stack->capacity = stack_capacity;
     stack->size = 0;
@@ -189,8 +271,8 @@ EXIT_CODES stackPop(stack_t *stack, stackElem_t *popTo)
     return EXIT_CODES::NO_ERRORS;
 }
 
-// Not doing canaryCheck because if these function is called than smth is happend (maybe canary is damaged), but we want to
-// display as much information as possible
+// Not doing canaryCheck because if these function is called than something has happened (maybe canary is damaged), but we want
+// to display as much information as possible
 #if defined(STACK_DEBUG_LEVEL) && STACK_DEBUG_LEVEL == 2
     EXIT_CODES stackDump(stack_t *stack)
     {
@@ -205,6 +287,10 @@ EXIT_CODES stackPop(stack_t *stack, stackElem_t *popTo)
         fprintf(DEFAULT_ERROR_TRACING_STREAM, "from %s(%d), %s():\n", __FILE__, __LINE__, __func__);
 
         fprintf(DEFAULT_ERROR_TRACING_STREAM, "{\n");
+
+        #if defined(STACK_CANARY) && STACK_CANARY == 1
+            fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\tCANARY = %d\n", stack->canaryLeft);
+        #endif
 
         fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\tcapacity = %d (%s)\n", stack->capacity, VALUE_CODE_TO_STR(stack->capacity >= 0));
         fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\tsize = %d (%s)\n",
@@ -239,6 +325,10 @@ EXIT_CODES stackPop(stack_t *stack, stackElem_t *popTo)
 
             fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\t}\n");
         }
+
+        #if defined(STACK_CANARY) && STACK_CANARY == 1
+            fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\tCANARY = %d \n", stack->canaryRight);
+        #endif
 
         fprintf(DEFAULT_ERROR_TRACING_STREAM, "}\n");
 
