@@ -5,21 +5,15 @@
 
 #include "../include/stack.h"
 
-//FIXME: do normal error tracing (use reasonable macroses)
 #if defined(STACK_CANARY) && STACK_CANARY == 1  
     
     EXIT_CODES canaryCheck(stack_t *stack, bool *result)
     {
-        //FIXME: 14-24 lines are copy-paste think how to implement better
         // Error check
-        if (stack == NULL)
+        if (!basicStackCheck(stack))
         {
-            PRINT_ERROR_TRACING_MESSAGE(STACK_EXIT_CODES::PASSED_STACK_IS_NULLPTR);
-            return EXIT_CODES::BAD_OBJECT_PASSED;
-        }
+            *result = false;
 
-        if (stack->data == NULL || stack->size < 0 || stack->size > stack->capacity)
-        {
             PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_OBJECT_PASSED);
             return EXIT_CODES::BAD_OBJECT_PASSED;
         }
@@ -34,7 +28,7 @@
         }
 
         // Stack data canary check
-        // FIXME: stack->data pointer can be changed to different location!
+        // FIXME: stack->data pointer can be changed to different location! (can be fixed using hashSum)
         if ( *(stack->data - 1) != CANARY_VALUE || stack->data[stack->capacity] != CANARY_VALUE)
         {
             *result = false;
@@ -43,6 +37,7 @@
             return EXIT_CODES::BAD_OBJECT_PASSED;
         }
 
+        *result = true;
         return EXIT_CODES::NO_ERRORS;
     }
 
@@ -71,76 +66,152 @@
     
 #endif
 
-//TODO: think of implementing comparison between saved hashSum and hashSum after lib function is done
 #if defined(STACK_HASH) && STACK_HASH == 1  
 
-    EXIT_CODES hashCheck(stack_t *stack)
+    EXIT_CODES structureHashSum(stack_t *stack, long long int *hash_sum)
     {
         // Error check
-        OBJECT_VERIFY(stack);
-
-        // HashSum check
-        //FIXME: hashSum can be easily changed
-        if (stack->hashSum == )
+        if (!basicStackCheck(stack))
         {
-            
+            PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_OBJECT_PASSED);
+            return EXIT_CODES::BAD_OBJECT_PASSED;
         }
 
+        // Calculate structure hash sum
+        (*hash_sum) = stack->capacity + stack->size;
+        #if defined(STACK_CANARY) && STACK_CANARY == 1
+            (*hash_sum) += 2 * CANARY_VALUE;
+        #endif
 
         return EXIT_CODES::NO_ERRORS;
     }
 
-    /*
-    EXIT_CODES stackDataHashSum(stack_t *stack, long long int *tempHashSum)
+    EXIT_CODES structureDataHashSum(stack_t *stack, long long int *hash_sum)
     {
         // Error check
-        OBJECT_VERIFY(stack);
+        if (!basicStackCheck(stack))
+        {
+            PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_OBJECT_PASSED);
+            return EXIT_CODES::BAD_OBJECT_PASSED;
+        }
 
-        // Calculation
-        *tempHashSum += (&stack->data[stack->size] - &stack->data[0]) * sizeof(stackElem_t);
+        // Calculate hash sum
+        #if defined(STACK_CANARY) && STACK_CANARY == 1
+            (*hash_sum) = 2 * CANARY_VALUE;  // stack->data canaries
+        #endif
+
+        for (int i = 0; i < stack->capacity; ++i)  // all stack->data elements
+        {
+            (*hash_sum) += stack->data[i];
+        }
+
+        return EXIT_CODES::NO_ERRORS;
     }
-    */
+
+    EXIT_CODES calculateStackHashSum(stack_t *stack, long long int *hash_sum)
+    {
+        // Error check
+        if (!basicStackCheck(stack))
+        {
+            PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_OBJECT_PASSED);
+            return EXIT_CODES::BAD_OBJECT_PASSED;
+        }
+
+        // Calculate full hash sum
+        long long int struct_hash_sum = 0;
+        IS_OK_WO_EXIT(structureHashSum(stack, &struct_hash_sum));
+
+        long long int struct_data_hash_sum = 0;
+        IS_OK_WO_EXIT(structureDataHashSum(stack, &struct_data_hash_sum));
+
+        (*hash_sum) = struct_hash_sum + struct_data_hash_sum;
+
+        return EXIT_CODES::NO_ERRORS;
+    }
+
+    //FIXME: hashSum can be easily changed
+    EXIT_CODES hashCheck(stack_t *stack, bool *result)
+    {
+        // Error check
+        if (!basicStackCheck(stack))
+        {
+            *result = false;
+
+            PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_OBJECT_PASSED);
+            return EXIT_CODES::BAD_OBJECT_PASSED;
+        }
+
+        // Hash sum check
+        long long int currentHashSum = 0;
+        IS_OK_WO_EXIT(calculateStackHashSum(stack, &currentHashSum));
+
+        if (stack->hashSum != currentHashSum)
+        {
+            *result = false;
+
+            PRINT_ERROR_TRACING_MESSAGE(STACK_EXIT_CODES::STACK_HASH_SUM_IS_DAMAGED);
+            return EXIT_CODES::BAD_OBJECT_PASSED;
+        }
+
+        *result = true;
+        return EXIT_CODES::NO_ERRORS;
+    }
 
     EXIT_CODES hashSumCtor(stack_t *stack)
     {
         // Error check
-        OBJECT_VERIFY(stack);
+        if (!basicStackCheck(stack))
+        {
+            PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_OBJECT_PASSED);
+            return EXIT_CODES::BAD_OBJECT_PASSED;
+        }
 
-        // Calculation
-        stack->hashSum += sizeof(stack->data) + sizeof(stack->capacity) + sizeof(stack->size)
-
-        #if defined(STACK_CANARY) && STACK_CANARY == 1
-            stack->hashSum += sizeof(stack->canaryLeft) + sizeof(stack->canaryRight);
-        #endif
+        // Calculation of hash sum
+        long long int currentHashSum = 0;
+        IS_OK_WO_EXIT(calculateStackHashSum(stack, &currentHashSum));
+        
+        stack->hashSum = currentHashSum;
 
         return EXIT_CODES::NO_ERRORS;
     }
 
 #endif
 
+bool basicStackCheck(stack_t *stack)
+{
+    return  stack != NULL && stack->data != NULL &&
+            stack->size >= 0 && stack->size <= stack->capacity;
+}
+
 bool stackOk(stack_t *stack)
 {
-    bool stack_check =  stack != NULL && stack->data != NULL &&
-                        stack->size >= 0 && stack->size <= stack->capacity;
-    
+    bool result = basicStackCheck(stack);
+
     #if defined(STACK_CANARY) && STACK_CANARY == 1  
         bool canary_is_ok = true;
-        canaryCheck(stack, &canary_is_ok);
+        IS_OK_WO_EXIT(canaryCheck(stack, &canary_is_ok));
 
-        stack_check = stack_check && canary_is_ok;
+        result = result && canary_is_ok;
     #endif 
 
     #if defined(STACK_HASH) && STACK_HASH == 1  
-        stack_check = stack_check && hashCheck(stack);
+        bool hash_is_ok = true;
+        IS_OK_WO_EXIT(hashCheck(stack, &hash_is_ok));
+
+        result = result && hash_is_ok;
     #endif
 
-    return stack_check;
+    return result;
 }
 
-EXIT_CODES sprayPoison(stack_t *stack)
+EXIT_CODES sprayPoisonOnData(stack_t *stack)
 {
     // Error check
-    OBJECT_VERIFY(stack);
+    if (!basicStackCheck(stack))
+    {
+        PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_OBJECT_PASSED);
+        return EXIT_CODES::BAD_OBJECT_PASSED;
+    }
 
     for (int i = stack->size; i < stack->capacity; ++i)
     {
@@ -150,7 +221,32 @@ EXIT_CODES sprayPoison(stack_t *stack)
     return EXIT_CODES::NO_ERRORS;
 }
 
-//Doing: hash sum
+#if STACK_CANARY == 1 || STACK_HASH == 1
+
+    EXIT_CODES stackCapacitySecurityIncrease(stack_t *stack, int *add_bytes)
+    {
+        // Error check
+        if (stack == NULL)
+        {
+            PRINT_ERROR_TRACING_MESSAGE(STACK_EXIT_CODES::PASSED_STACK_IS_NULLPTR);
+            return EXIT_CODES::BAD_OBJECT_PASSED;
+        }
+
+        // Protection bytes for hashSum field
+        #if defined(STACK_HASH) && STACK_HASH == 1
+            (*add_bytes) += sizeof(stack->hashSum);
+        #endif
+        
+        // Protection bytes for canary fields
+        #if defined(STACK_CANARY) && STACK_CANARY == 1
+            (*add_bytes) += (LEFT_CANARY_SIZE + RIGHT_CANARY_SIZE);
+        #endif
+
+        return EXIT_CODES::NO_ERRORS;
+    }
+
+#endif
+
 EXIT_CODES stackCtor(stack_t *stack, int stack_capacity)
 {
     // Error check
@@ -160,22 +256,15 @@ EXIT_CODES stackCtor(stack_t *stack, int stack_capacity)
         return EXIT_CODES::BAD_OBJECT_PASSED;
     }
 
-    if (stack->capacity != -1 || stack->size != -1)
+    if (stack->data != NULL || stack->capacity != -1 || stack->size != -1)
     {
         PRINT_ERROR_TRACING_MESSAGE(STACK_EXIT_CODES::OLD_STACK_PASSED);
         return EXIT_CODES::BAD_OBJECT_PASSED;
     }
 
-    // Protection bytes for hashSum field
+    // Count additional bytes needed for security fields
     int protection_capacity_increse = 0;
-    #if defined(STACK_HASH) && STACK_HASH == 1
-        protection_capacity_increse += sizeof(stack->hashSum);
-    #endif
-    
-    // Protection bytes for canary fields
-    #if defined(STACK_CANARY) && STACK_CANARY == 1
-        protection_capacity_increse += (LEFT_CANARY_SIZE + RIGHT_CANARY_SIZE);
-    #endif
+    IS_OK_W_EXIT(stackCapacitySecurityIncrease(stack, &protection_capacity_increse));
 
     // Memory allocation (for stack elements)
     stack->data = (stackElem_t *) malloc(stack_capacity * sizeof(stackElem_t) + protection_capacity_increse);
@@ -190,16 +279,17 @@ EXIT_CODES stackCtor(stack_t *stack, int stack_capacity)
         IS_OK_W_EXIT(canaryCtor(stack, stack_capacity));
     #endif
 
+    // Fill stack structure
+    stack->capacity = stack_capacity;
+    stack->size = 0;
+
+    // Poison allocated data fields
+    IS_OK_W_EXIT(sprayPoisonOnData(stack));
+
     // Construct hasSum field
     #if defined(STACK_HASH) && STACK_HASH == 1
         IS_OK_W_EXIT(hashSumCtor(stack));
     #endif
-
-    stack->capacity = stack_capacity;
-    stack->size = 0;
-
-    // Poison new fields
-    IS_OK_W_EXIT(sprayPoison(stack));
 
     return EXIT_CODES::NO_ERRORS;
 }
@@ -207,7 +297,7 @@ EXIT_CODES stackCtor(stack_t *stack, int stack_capacity)
 EXIT_CODES getNewReallocationCapacity(stack_t *stack, REALLOC_MODES mode, int *new_capacity)
 {
     // Error check
-    OBJECT_VERIFY(stack);
+    OBJECT_VERIFY(stack, stack);
 
     switch (mode)
     {
@@ -227,11 +317,16 @@ EXIT_CODES getNewReallocationCapacity(stack_t *stack, REALLOC_MODES mode, int *n
 EXIT_CODES stackReallocation(stack_t *stack, REALLOC_MODES mode)
 {
     // Error check
-    OBJECT_VERIFY(stack);
+    OBJECT_VERIFY(stack, stack);
 
     // Get new reallocation capacity
     int new_capacity = 0;
     IS_OK_W_EXIT(getNewReallocationCapacity(stack, mode, &new_capacity));
+
+    int protection_capacity_increse = 0;
+    #if defined(STACK_CANARY) && STACK_CANARY == 1
+        protection_capacity_increse += (LEFT_CANARY_SIZE + RIGHT_CANARY_SIZE);
+    #endif
 
     #if defined(STACK_CANARY) && STACK_CANARY == 1
         stackElem_t *temp = (stackElem_t *) realloc(stack->data - 1,  // because we want to free canaries (left and right)
@@ -258,7 +353,12 @@ EXIT_CODES stackReallocation(stack_t *stack, REALLOC_MODES mode)
     stack->capacity = new_capacity;
 
     // Poison new fields
-    IS_OK_W_EXIT(sprayPoison(stack));
+    IS_OK_W_EXIT(sprayPoisonOnData(stack));
+
+    // Update hash sum
+    #if defined(STACK_HASH) && STACK_HASH == 1
+        IS_OK_W_EXIT(hashSumCtor(stack));
+    #endif
 
     return EXIT_CODES::NO_ERRORS;
 }
@@ -266,7 +366,7 @@ EXIT_CODES stackReallocation(stack_t *stack, REALLOC_MODES mode)
 EXIT_CODES stackPush(stack_t *stack, stackElem_t value)
 {
     // Error check
-    OBJECT_VERIFY(stack);
+    OBJECT_VERIFY(stack, stack);
 
     if (stack->size == stack->capacity)
     {
@@ -275,13 +375,18 @@ EXIT_CODES stackPush(stack_t *stack, stackElem_t value)
 
     stack->data[stack->size++] = value;
 
+    // Update hash sum
+    #if defined(STACK_HASH) && STACK_HASH == 1
+        IS_OK_W_EXIT(hashSumCtor(stack));
+    #endif
+
     return EXIT_CODES::NO_ERRORS;
 }
 
 EXIT_CODES stackPop(stack_t *stack, stackElem_t popTo)
 {
     // Error check
-    OBJECT_VERIFY(stack);
+    OBJECT_VERIFY(stack, stack);
 
     if (stack->size < 1)
     {
@@ -294,8 +399,13 @@ EXIT_CODES stackPop(stack_t *stack, stackElem_t popTo)
         IS_OK_W_EXIT(stackReallocation(stack, REALLOC_MODES::DECREASE));
     }
 
-    popTo = stack->data[stack->size--];
-    stack->data[stack->size + 1] = POISON;
+    popTo = stack->data[--stack->size];
+    stack->data[stack->size] = POISON;
+
+    // Update hash sum
+    #if defined(STACK_HASH) && STACK_HASH == 1
+        IS_OK_W_EXIT(hashSumCtor(stack));
+    #endif
 
     return EXIT_CODES::NO_ERRORS;
 }
@@ -332,7 +442,7 @@ EXIT_CODES stackPop(stack_t *stack, stackElem_t popTo)
                 fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\t\t [-1] = %d (CANARY)\n", *(stack->data - 1));
             #endif
 
-            for (int element = 0; element < 10; ++element)
+            for (int element = 0; element < 8; ++element)
             {
                 if (stack->data[element] != POISON)
                 {
@@ -357,6 +467,10 @@ EXIT_CODES stackPop(stack_t *stack, stackElem_t popTo)
             fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\tCANARY = %d \n", stack->canaryRight);
         #endif
 
+        #if defined(STACK_CANARY) && STACK_CANARY == 1
+            fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\tHASH_SUM = %lld \n", stack->hashSum);
+        #endif
+
         fprintf(DEFAULT_ERROR_TRACING_STREAM, "}\n");
 
         return EXIT_CODES::NO_ERRORS;
@@ -365,7 +479,7 @@ EXIT_CODES stackPop(stack_t *stack, stackElem_t popTo)
 
 EXIT_CODES stackDtor(stack_t *stack)
 {
-    OBJECT_VERIFY(stack);
+    OBJECT_VERIFY(stack, stack);
 
     #if defined(STACK_CANARY) && STACK_CANARY == 1
         free(stack->data - 1);
