@@ -21,15 +21,16 @@ enum class EXIT_CODES
 
     #define VALUE_CODE_TO_STR(expression)  ( !!(expression) ? GREEN"OK"RESET : RED"ERROR"RESET )
     #define STRINGIFY(object) #object
-
-    #define IS_OK(exit_code, exitOnError)                                               \
+ 
+    #define IS_OK(function, exitOnError)                                                \
         do                                                                              \
         {                                                                               \
-            if ((exit_code) != EXIT_CODES::NO_ERRORS)                                   \
+            EXIT_CODES exit_code = function;                                            \
+            if (exit_code != EXIT_CODES::NO_ERRORS)                                     \
             {                                                                           \
                 fprintf(DEFAULT_ERROR_TRACING_STREAM,                                   \
                         RED"[ERROR] "RESET"Error in %s(%d) -> %s() -> %s(%d);\n",       \
-                        __FILE__, __LINE__, __func__, #exit_code, ((int) exit_code));   \
+                        __FILE__, __LINE__, __func__, #function, ((int) exit_code));   \
                 if (exitOnError)                                                        \
                 {                                                                       \
                     exit(EXIT_FAILURE);                                                 \
@@ -37,9 +38,9 @@ enum class EXIT_CODES
             }                                                                           \
         } while (0)
 
-    #define IS_OK_WO_EXIT(exit_code) IS_OK(exit_code, false)
+    #define IS_OK_WO_EXIT(function) IS_OK(function, false)
 
-    #define IS_OK_W_EXIT(exit_code) IS_OK(exit_code, true)
+    #define IS_OK_W_EXIT(function) IS_OK(function, true)
 
     #define PRINT_ERROR_TRACING_MESSAGE(errorMsg)                                       \
         do                                                                              \
@@ -50,13 +51,12 @@ enum class EXIT_CODES
             );                                                                          \
         } while (0)
 
-
-    #define OBJECT_VERIFY(object)                                                       \
+    #define OBJECT_VERIFY(object, type)                                                 \
         do                                                                              \
         {                                                                               \
-            if (!object##Ok(object))                                                    \
+            if (!type##Ok(object))                                                      \
             {                                                                           \
-                object##Dump(object);                                                   \
+                type##Dump(object);                                                     \
                 PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_OBJECT_PASSED);             \
                 return EXIT_CODES::BAD_OBJECT_PASSED;                                   \
             }                                                                           \
@@ -64,11 +64,11 @@ enum class EXIT_CODES
 
 #else
 
-    #define IS_OK(function) function
+    #define IS_OK(function, exitOnError) function
     #define IS_OK_WO_EXIT(function) function
     #define IS_OK_W_EXIT(function) function
     #define PRINT_ERROR_TRACING_MESSAGE(error_code)
-    #define OBJECT_VERIFY(object)
+    #define OBJECT_VERIFY(object, type)
 
 #endif
 
