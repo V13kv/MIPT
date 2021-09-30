@@ -51,9 +51,8 @@ struct stack_t
 #endif
 
 #if defined(STACK_CANARY) && STACK_CANARY == 1  
-    EXIT_CODES canaryCheck(stack_t *stack);
-#else
-    #define canaryCheck(stack) EXIT_CODES::NO_ERRORS
+    EXIT_CODES canaryCheck(stack_t *stack, bool *result);
+    EXIT_CODES canaryCtor(stack_t *stack, int stack_capacity);
 #endif
 
 bool stackOk(stack_t *stack);
@@ -65,7 +64,7 @@ EXIT_CODES getNewReallocationCapacity(stack_t *stack, REALLOC_MODES mode, int *n
 EXIT_CODES stackReallocation(stack_t *stack, REALLOC_MODES mode);
 
 EXIT_CODES stackPush(stack_t *stack, stackElem_t value);
-EXIT_CODES stackPop(stack_t *stack, stackElem_t *popTo = NULL);
+EXIT_CODES stackPop(stack_t *stack, stackElem_t popTo = 0);
 
 
 

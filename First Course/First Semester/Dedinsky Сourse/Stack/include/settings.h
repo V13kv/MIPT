@@ -24,7 +24,7 @@
 
     // Enable/disable hash sum
     //#define STACK_HASH      0
-    #define STACK_HASH      1
+    //#define STACK_HASH      1
 
 #pragma endregion STACK_SECURITY
 
