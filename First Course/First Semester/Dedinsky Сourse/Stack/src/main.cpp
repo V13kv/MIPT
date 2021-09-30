@@ -12,7 +12,11 @@ int main(void)
     {
         IS_OK_W_EXIT(stackPush(&stack, i));
     }
-    IS_OK_WO_EXIT(stackDump(&stack));
+
+    for (int i = 0; i < 2000; ++i)
+    {
+        IS_OK_W_EXIT(stackPop(&stack));
+    }
     stackReallocation(&stack, REALLOC_MODES::INCREASE);
 
     IS_OK_WO_EXIT(stackDtor(&stack));
