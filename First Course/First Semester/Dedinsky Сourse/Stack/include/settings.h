@@ -12,9 +12,8 @@
 
 #pragma region STACK_SECURITY
 
-    // Enable/disable canary
-    //#define STACK_CANARY        0
-    //#define STACK_CANARY        1
+    //#define STACK_CANARY        0  // Enable canary
+    #define STACK_CANARY        1  // Disable canary
 
     #if defined(STACK_CANARY) && STACK_CANARY == 1
         #define LEFT_CANARY_SIZE    sizeof(stackElem_t)
@@ -22,9 +21,8 @@
         #define CANARY_VALUE        0xBABE
     #endif
 
-    // Enable/disable hash sum
-    //#define STACK_HASH      0
-    //#define STACK_HASH      1
+    //#define STACK_HASH      0  // Enable hash sum
+    #define STACK_HASH      1  // Disable hash sum
 
 #pragma endregion STACK_SECURITY
 

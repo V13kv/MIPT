@@ -5,11 +5,14 @@
 #include "colors.h"
 
 #define DEFAULT_ERROR_TRACING_STREAM    stderr
+
+// Debug level must be defined in your file before including this library
 #pragma region DEBUG_LEVELS
     //#define STACK_DEBUG_LEVEL 1  // Minimal debug info (only messages are shown)
     //#define STACK_DEBUG_LEVEL 2  // Maximum debug info (messages and dumps are shown)
 #pragma endregion DEBUG_LEVELS
 
+// Universal exit codes
 enum class EXIT_CODES
 {
     NO_ERRORS,
