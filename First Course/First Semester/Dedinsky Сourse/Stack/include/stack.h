@@ -76,9 +76,9 @@ struct stack_t
 #endif
 
 #if STACK_CANARY == 1 || STACK_HASH == 1
-    EXIT_CODES stackCapacitySecurityIncrease(stack_t *stack, int *add_bytes);
+    EXIT_CODES stackCapacityIncrease(stack_t *stack, int *add_bytes);
 #else
-    #define stackCapacitySecurityIncrease(stack, add_bytes) EXIT_CODES::NO_ERRORS;
+    #define stackCapacityIncrease(stack, add_bytes) EXIT_CODES::NO_ERRORS;
 #endif
 
 bool stackBasicCheck(stack_t *stack);
@@ -93,7 +93,6 @@ EXIT_CODES stackReallocation(stack_t *stack, REALLOC_MODES mode);
 EXIT_CODES stackPush(stack_t *stack, stackElem_t value);
 
 #define DEFAULT_POPTO_VALUE (int *) 1
-// TODO: change popTo parameter into pointer
 EXIT_CODES stackPop(stack_t *stack, stackElem_t *popTo = DEFAULT_POPTO_VALUE);
 
 

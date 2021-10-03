@@ -33,7 +33,7 @@ enum class EXIT_CODES
             {                                                                           \
                 fprintf(DEFAULT_ERROR_TRACING_STREAM,                                   \
                         RED"[ERROR] "RESET"Error in %s(%d) -> %s() -> %s(%d);\n",       \
-                        __FILE__, __LINE__, __func__, #function, ((int) exit_code));   \
+                        __FILE__, __LINE__, __func__, #function, ((int) exit_code));    \
                 if (exitOnError)                                                        \
                 {                                                                       \
                     exit(EXIT_FAILURE);                                                 \
