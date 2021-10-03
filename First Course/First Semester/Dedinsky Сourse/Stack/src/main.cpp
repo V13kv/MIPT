@@ -3,18 +3,13 @@
 
 #include "../include/stack.h"
 
-//TODO: переделать hash сумму под байты (считать по байтам в цикле, чтобы не зависеть от структуры (при добавлении нового поля в структуре))
-//TODO: переделать канарейки под байты (также как и выше)
-//TODO: переименовать stackCapacitySecurityIncrease в более подходящее
-//TODO: расставить проверки везде где только возможно
-//TODO: сделать логичным кол-во функций hashSum (посмотреть)
 int main(void)
 {
     stack_t stack = {};
-    IS_OK_W_EXIT(stackCtor(&stack, 8));
+    stackCtor(&stack, 8);
 
-    // -----------------------------------Hash sum and canary check-----------------------------------
-    // stack.data = (int *) malloc(sizeof(int));
+    // -----------------------------------Hash sum and canary test-----------------------------------
+    // stack.data = (int *) calloc(1, sizeof(stackElem_t));
     // IS_OK_W_EXIT(stackPop(&stack));
 
     // -----------------------------------Standard debug macroses test-----------------------------------
@@ -31,6 +26,9 @@ int main(void)
     // -----------------------------------Canary test-----------------------------------
     // *((int*)(&stack)) = -1;
     // IS_OK_W_EXIT(stackReallocation(&stack, REALLOC_MODES::INCREASE));
+
+    //-----------------------------------Hash Sum test----------------------------------
+    // stack.hashSum = 1234;
 
     stackDtor(&stack);
 

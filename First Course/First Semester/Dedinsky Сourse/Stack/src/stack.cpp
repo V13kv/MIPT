@@ -7,6 +7,33 @@
 
 #if defined(STACK_CANARY) && STACK_CANARY == 1  
     
+    EXIT_CODES canaryCtor(stack_t *stack, int stack_capacity)
+    {
+        // Error check
+        if (stack == NULL)
+        {
+            PRINT_ERROR_TRACING_MESSAGE(STACK_EXIT_CODES::PASSED_STACK_IS_NULLPTR);
+            return EXIT_CODES::BAD_OBJECT_PASSED;
+        }
+
+        if (stack->capacity != -1 || stack->size != -1)  // Only just created stack object can call canaryCtor
+        {
+            PRINT_ERROR_TRACING_MESSAGE(STACK_EXIT_CODES::OLD_STACK_PASSED);
+            return EXIT_CODES::BAD_OBJECT_PASSED;
+        }
+
+        // Canary construction
+        int *canaryLeft = (int *) stack->data;
+        *canaryLeft = CANARY_VALUE;
+
+        int *canaryRight = (int *) (((char *) stack->data) + sizeof(stack->canaryLeft) + stack_capacity * sizeof(stackElem_t));
+        *canaryRight = CANARY_VALUE;
+
+        stack->data = (stackElem_t *) (((char *) stack->data) + sizeof(stack->canaryLeft));
+
+        return EXIT_CODES::NO_ERRORS;
+    }
+
     EXIT_CODES canaryCheck(stack_t *stack, bool *result)
     {
         // Error check
@@ -28,8 +55,9 @@
         }
 
         // Stack data canary check
-        // FIXME: bug stack->data pointer can be changed to different location! (can be fixed using hashSum)
-        if ( *(stack->data - 1) != CANARY_VALUE || stack->data[stack->capacity] != CANARY_VALUE)
+        int *canaryLeft = (int *) (((char *) stack->data) - sizeof(stack->canaryLeft));
+        int *canaryRight = (int *) ( ((char *) stack->data) + stack->capacity * sizeof(stackElem_t));
+        if ( *canaryLeft != CANARY_VALUE || *canaryRight != CANARY_VALUE)
         {
             *result = false;
 
@@ -40,99 +68,29 @@
         *result = true;
         return EXIT_CODES::NO_ERRORS;
     }
-
-    EXIT_CODES canaryCtor(stack_t *stack, int stack_capacity)
-    {
-        // Error check
-        if (stack == NULL)
-        {
-            PRINT_ERROR_TRACING_MESSAGE(STACK_EXIT_CODES::PASSED_STACK_IS_NULLPTR);
-            return EXIT_CODES::BAD_OBJECT_PASSED;
-        }
-
-        if (stack->capacity != -1 || stack->size != -1)
-        {
-            PRINT_ERROR_TRACING_MESSAGE(STACK_EXIT_CODES::OLD_STACK_PASSED);
-            return EXIT_CODES::BAD_OBJECT_PASSED;
-        }
-
-        // Canary construction
-        stack->data[0] = CANARY_VALUE;
-        stack->data[stack_capacity + 1] = CANARY_VALUE;
-        stack->data++;
-
-        return EXIT_CODES::NO_ERRORS;
-    }
     
 #endif
 
 #if defined(STACK_HASH) && STACK_HASH == 1  
 
-    EXIT_CODES stackHashSum(stack_t *stack, long long int *hash_sum)
+    EXIT_CODES hashSumCtor(stack_t *stack)
     {
         // Error check
-        if (!stackBasicCheck(stack) || hash_sum == NULL)
+        if (!stackBasicCheck(stack))
         {
             PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_OBJECT_PASSED);
             return EXIT_CODES::BAD_OBJECT_PASSED;
         }
 
-        // Calculate structure hash sum
-        (*hash_sum) = stack->capacity + stack->size + *stack->data;  // FIXME: bug *stack->data can cause undefined behaviour
-        #if defined(STACK_CANARY) && STACK_CANARY == 1
-            (*hash_sum) += 2 * CANARY_VALUE;
-        #endif
+        // Calculation of hash sum
+        long long int currentHashSum = 0;
+        IS_OK_WO_EXIT(calculateStackHashSum(stack, &currentHashSum));
+        
+        stack->hashSum = currentHashSum;
 
         return EXIT_CODES::NO_ERRORS;
     }
 
-    EXIT_CODES stackDataHashSum(stack_t *stack, long long int *hash_sum)
-    {
-        // Error check
-        if (!stackBasicCheck(stack) || hash_sum == NULL)
-        {
-            PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_OBJECT_PASSED);
-            return EXIT_CODES::BAD_OBJECT_PASSED;
-        }
-
-        // Calculate hash sum
-        #if defined(STACK_CANARY) && STACK_CANARY == 1
-            (*hash_sum) = 2 * CANARY_VALUE;  // stack->data canaries
-        #endif
-
-        //TODO: изменить сумму под универсальную вещь (сделать факторизацию, разбиение на 8,4,2,1 байты)
-        //TODO: написать однобайтовую сумму char *new_data = stack->data        
-        for (int i = 0; i < stack->capacity; ++i)  // all stack->data elements
-        {
-            // (*hash_sum) += new_data[i]
-            (*hash_sum) += stack->data[i];
-        }
-
-        return EXIT_CODES::NO_ERRORS;
-    }
-
-    EXIT_CODES calculateStackHashSum(stack_t *stack, long long int *hash_sum)
-    {
-        // Error check
-        if (!stackBasicCheck(stack) || hash_sum == NULL)
-        {
-            PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_OBJECT_PASSED);
-            return EXIT_CODES::BAD_OBJECT_PASSED;
-        }
-
-        // Calculate full hash sum
-        long long int struct_hash_sum = 0;
-        IS_OK_WO_EXIT(stackHashSum(stack, &struct_hash_sum));
-
-        long long int struct_data_hash_sum = 0;
-        IS_OK_WO_EXIT(stackDataHashSum(stack, &struct_data_hash_sum));
-
-        (*hash_sum) = struct_hash_sum + struct_data_hash_sum;
-
-        return EXIT_CODES::NO_ERRORS;
-    }
-
-    //FIXME: hashSum can be easily changed
     EXIT_CODES hashCheck(stack_t *stack, bool *result)
     {
         // Error check
@@ -160,21 +118,73 @@
         return EXIT_CODES::NO_ERRORS;
     }
 
-    EXIT_CODES hashSumCtor(stack_t *stack)
+    EXIT_CODES calculateStackHashSum(stack_t *stack, long long int *hash_sum)
     {
         // Error check
-        if (!stackBasicCheck(stack))
+        if (!stackBasicCheck(stack) || hash_sum == NULL)
         {
             PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_OBJECT_PASSED);
             return EXIT_CODES::BAD_OBJECT_PASSED;
         }
 
-        // Calculation of hash sum
-        long long int currentHashSum = 0;
-        IS_OK_WO_EXIT(calculateStackHashSum(stack, &currentHashSum));
-        
-        stack->hashSum = currentHashSum;
+        // Calculate full hash sum
+        long long int stack_hash_sum = 0;
+        IS_OK_WO_EXIT(stackHashSum(stack, &stack_hash_sum));
 
+        long long int stack_data_hash_sum = 0;
+        IS_OK_WO_EXIT(stackDataHashSum(stack, &stack_data_hash_sum));
+
+        (*hash_sum) = stack_hash_sum + stack_data_hash_sum;
+
+        return EXIT_CODES::NO_ERRORS;
+    }
+
+    EXIT_CODES stackHashSum(stack_t *stack, long long int *hash_sum)
+    {
+        // Error check
+        if (!stackBasicCheck(stack) || hash_sum == NULL)
+        {
+            PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_OBJECT_PASSED);
+            return EXIT_CODES::BAD_OBJECT_PASSED;
+        }
+
+        // Calculate structure hash sum
+        *hash_sum = 0;
+        char *stack_p = (char *) stack;
+        unsigned long long stack_total_bytes = sizeof(stack_t) - sizeof(stack->hashSum);
+        for (unsigned long long byte = 0; byte < stack_total_bytes; ++byte)
+        {
+            (*hash_sum) += stack_p[byte];
+        }
+
+        return EXIT_CODES::NO_ERRORS;
+    }
+
+    EXIT_CODES stackDataHashSum(stack_t *stack, long long int *hash_sum)
+    {
+        // Error check
+        if (!stackBasicCheck(stack) || hash_sum == NULL)
+        {
+            PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_OBJECT_PASSED);
+            return EXIT_CODES::BAD_OBJECT_PASSED;
+        }
+
+        // Calculate data hash sum
+        long long int data_total_bytes = stack->capacity * sizeof(stackElem_t);
+        #if defined(STACK_CANARY) && STACK_CANARY == 1
+            data_total_bytes += sizeof(stack->canaryLeft) + sizeof(stack->canaryRight);
+
+            char *data_p = ((char *) stack->data) - sizeof(stack->canaryLeft);
+        #else
+            char *data_p = (char *) stack->data;
+        #endif
+
+        *hash_sum = 0; 
+        for (long long byte = 0; byte < data_total_bytes; ++byte)
+        {
+            (*hash_sum) += data_p[byte];
+        }
+     
         return EXIT_CODES::NO_ERRORS;
     }
 
@@ -189,6 +199,7 @@ bool stackBasicCheck(stack_t *stack)
 bool stackOk(stack_t *stack)
 {
     bool result = stackBasicCheck(stack);
+
     #if defined(STACK_CANARY) && STACK_CANARY == 1  
         bool canary_is_ok = true;
         IS_OK_WO_EXIT(canaryCheck(stack, &canary_is_ok));
@@ -225,7 +236,7 @@ EXIT_CODES sprayPoisonOnData(stack_t *stack)
 
 #if STACK_CANARY == 1 || STACK_HASH == 1
 
-    EXIT_CODES stackCapacitySecurityIncrease(stack_t *stack, int *add_bytes)
+    EXIT_CODES stackCapacityIncrease(stack_t *stack, int *add_bytes)
     {
         // Error check
         if (stack == NULL || add_bytes == NULL)
@@ -266,11 +277,11 @@ EXIT_CODES stackCtor(stack_t *stack, int stack_capacity)
     }
 
     // Count additional bytes needed for security fields
-    int protection_capacity_increse = 0;
-    IS_OK_W_EXIT(stackCapacitySecurityIncrease(stack, &protection_capacity_increse));
-
+    int stack_capacity_increase = 0;
+    IS_OK_W_EXIT(stackCapacityIncrease(stack, &stack_capacity_increase));
+    
     // Memory allocation (for stack elements)
-    stack->data = (stackElem_t *) malloc(stack_capacity * sizeof(stackElem_t) + protection_capacity_increse);
+    stack->data = (stackElem_t *) calloc(1, stack_capacity * sizeof(stackElem_t) + stack_capacity_increase);
     if (stack->data == NULL)
     {
         PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_STD_FUNC_RESULT);
@@ -335,9 +346,9 @@ EXIT_CODES stackReallocation(stack_t *stack, REALLOC_MODES mode)
     int new_capacity = 0;
     IS_OK_W_EXIT(getNewReallocationCapacity(stack, mode, &new_capacity));
 
-    int protection_capacity_increse = 0;
+    int stack_capacity_increase = 0;
     #if defined(STACK_CANARY) && STACK_CANARY == 1
-        protection_capacity_increse += (LEFT_CANARY_SIZE + RIGHT_CANARY_SIZE);
+        stack_capacity_increase += (LEFT_CANARY_SIZE + RIGHT_CANARY_SIZE);
     #endif
 
     #if defined(STACK_CANARY) && STACK_CANARY == 1
@@ -473,8 +484,8 @@ EXIT_CODES stackPop(stack_t *stack, stackElem_t *popTo)
         {
             fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\t{\n");
 
-            #if defined(STACK_CANARY) && STACK_CANARY == 1
-                fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\t\t [-1] = %d (CANARY)\n", *(stack->data - 1));
+            #if defined(STACK_CANARY) && STACK_CANARY == 1   
+                fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\t\t [-1] = %d (CANARY)\n", *((int * ) (((char *) stack->data) - sizeof(stack->canaryLeft))));//*(stack->data - 1));
             #endif
 
             for (int element = 0; element < 8; ++element)
@@ -492,7 +503,7 @@ EXIT_CODES stackPop(stack_t *stack, stackElem_t *popTo)
             fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\t\t ...\n");
 
             #if defined(STACK_CANARY) && STACK_CANARY == 1
-                fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\t\t [%d] = %d (CANARY)\n", stack->capacity, stack->data[stack->capacity]);
+                fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\t\t [%d] = %d (CANARY)\n", stack->capacity, *((int *) (((char *) stack->data) + stack->capacity * sizeof(stackElem_t))));//stack->data[stack->capacity]);
             #endif
 
             fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\t}\n");
