@@ -71,6 +71,7 @@
     
 #endif
 
+//TODO: separate file for hashSum functions
 #if defined(STACK_HASH) && STACK_HASH == 1  
 
     EXIT_CODES hashSumCtor(stack_t *stack)
@@ -154,7 +155,7 @@
         unsigned long long stack_total_bytes = sizeof(stack_t) - sizeof(stack->hashSum);
         for (unsigned long long byte = 0; byte < stack_total_bytes; ++byte)
         {
-            (*hash_sum) += stack_p[byte];
+            (*hash_sum) += stack_p[byte];  // TODO: rolling hash
         }
 
         return EXIT_CODES::NO_ERRORS;
@@ -182,7 +183,7 @@
         *hash_sum = 0; 
         for (long long byte = 0; byte < data_total_bytes; ++byte)
         {
-            (*hash_sum) += data_p[byte];
+            (*hash_sum) += data_p[byte];  // TODO: rolling hash
         }
      
         return EXIT_CODES::NO_ERRORS;
@@ -366,9 +367,13 @@ EXIT_CODES stackReallocation(stack_t *stack, REALLOC_MODES mode)
 
     #if defined(STACK_CANARY) && STACK_CANARY == 1
         // Set canaries
-        temp[0] = CANARY_VALUE;
-        temp[new_capacity + 1] = CANARY_VALUE;
-        temp++;
+        int *canaryLeft = (int *) temp;
+        *canaryLeft = CANARY_VALUE;
+
+        int *canaryRight = (int *) (((char *) temp) + sizeof(stack->canaryLeft) + new_capacity * sizeof(stackElem_t));
+        *canaryRight = CANARY_VALUE;
+
+        temp = (stackElem_t *) (((char *) temp) + sizeof(stack->canaryLeft));
     #endif
 
     // Update structure variables
@@ -443,7 +448,7 @@ EXIT_CODES stackPop(stack_t *stack, stackElem_t *popTo)
         *popTo = stack->data[--stack->size];
     }
 
-    stack->data[--stack->size] = POISON;
+    stack->data[stack->size] = POISON;
 
     // Update hash sum
     #if defined(STACK_HASH) && STACK_HASH == 1
@@ -513,7 +518,7 @@ EXIT_CODES stackPop(stack_t *stack, stackElem_t *popTo)
             fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\tCANARY = %d \n", stack->canaryRight);
         #endif
 
-        #if defined(STACK_CANARY) && STACK_CANARY == 1
+        #if defined(STACK_HASH) && STACK_HASH == 1
             fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\tHASH_SUM = %lld \n", stack->hashSum);
         #endif
 
@@ -529,7 +534,7 @@ EXIT_CODES stackDtor(stack_t *stack)
     OBJECT_VERIFY(stack, stack);
 
     #if defined(STACK_CANARY) && STACK_CANARY == 1
-        free(stack->data - 1);
+        free((int *) (((char *) stack->data) - sizeof(stack->canaryLeft)));
     #else
         free(stack->data);
     #endif
