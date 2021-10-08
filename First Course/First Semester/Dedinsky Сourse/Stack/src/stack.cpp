@@ -55,7 +55,7 @@
         }
 
         // Stack data canary check
-        int *canaryLeft = (int *) (((char *) stack->data) - sizeof(stack->canaryLeft));
+        int *canaryLeft  = (int *) ( ((char *) stack->data) - sizeof(stack->canaryLeft));
         int *canaryRight = (int *) ( ((char *) stack->data) + stack->capacity * sizeof(stackElem_t));
         if ( *canaryLeft != CANARY_VALUE || *canaryRight != CANARY_VALUE)
         {
@@ -74,6 +74,7 @@
 //TODO: separate file for hashSum functions
 #if defined(STACK_HASH) && STACK_HASH == 1  
 
+    //TODO: rename function
     EXIT_CODES hashSumCtor(stack_t *stack)
     {
         // Error check
@@ -92,33 +93,6 @@
         return EXIT_CODES::NO_ERRORS;
     }
 
-    EXIT_CODES hashCheck(stack_t *stack, bool *result)
-    {
-        // Error check
-        if (!stackBasicCheck(stack) || result == NULL)
-        {
-            *result = false;
-
-            PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_OBJECT_PASSED);
-            return EXIT_CODES::BAD_OBJECT_PASSED;
-        }
-
-        // Hash sum check
-        long long int currentHashSum = 0;
-        IS_OK_WO_EXIT(calculateStackHashSum(stack, &currentHashSum));
-
-        if (stack->hashSum != currentHashSum)
-        {
-            *result = false;
-
-            PRINT_ERROR_TRACING_MESSAGE(STACK_EXIT_CODES::STACK_HASH_SUM_IS_DAMAGED);
-            return EXIT_CODES::BAD_OBJECT_PASSED;
-        }
-
-        *result = true;
-        return EXIT_CODES::NO_ERRORS;
-    }
-
     EXIT_CODES calculateStackHashSum(stack_t *stack, long long int *hash_sum)
     {
         // Error check
@@ -130,10 +104,10 @@
 
         // Calculate full hash sum
         long long int stack_hash_sum = 0;
-        IS_OK_WO_EXIT(stackHashSum(stack, &stack_hash_sum));
+        IS_OK_WO_EXIT (stackHashSum (stack, &stack_hash_sum));
 
         long long int stack_data_hash_sum = 0;
-        IS_OK_WO_EXIT(stackDataHashSum(stack, &stack_data_hash_sum));
+        IS_OK_WO_EXIT (stackDataHashSum (stack, &stack_data_hash_sum));
 
         (*hash_sum) = stack_hash_sum + stack_data_hash_sum;
 
@@ -155,7 +129,7 @@
         unsigned long long stack_total_bytes = sizeof(stack_t) - sizeof(stack->hashSum);
         for (unsigned long long byte = 0; byte < stack_total_bytes; ++byte)
         {
-            (*hash_sum) += stack_p[byte];  // TODO: rolling hash
+            (*hash_sum) += stack_p[byte] * byte;
         }
 
         return EXIT_CODES::NO_ERRORS;
@@ -183,9 +157,36 @@
         *hash_sum = 0; 
         for (long long byte = 0; byte < data_total_bytes; ++byte)
         {
-            (*hash_sum) += data_p[byte];  // TODO: rolling hash
+            (*hash_sum) += data_p[byte] * byte;
         }
      
+        return EXIT_CODES::NO_ERRORS;
+    }
+
+    EXIT_CODES hashCheck(stack_t *stack, bool *result)
+    {
+        // Error check
+        if (!stackBasicCheck(stack) || result == NULL)
+        {
+            *result = false;
+
+            PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_OBJECT_PASSED);
+            return EXIT_CODES::BAD_OBJECT_PASSED;
+        }
+
+        // Hash sum check
+        long long int currentHashSum = 0;
+        IS_OK_WO_EXIT(calculateStackHashSum(stack, &currentHashSum));
+
+        if (stack->hashSum != currentHashSum)
+        {
+            *result = false;
+
+            PRINT_ERROR_TRACING_MESSAGE(STACK_EXIT_CODES::STACK_HASH_SUM_IS_DAMAGED);
+            return EXIT_CODES::BAD_OBJECT_PASSED;
+        }
+
+        *result = true;
         return EXIT_CODES::NO_ERRORS;
     }
 

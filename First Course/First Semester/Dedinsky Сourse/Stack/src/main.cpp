@@ -3,18 +3,6 @@
 
 #include "../include/stack.h"
 
-//FIXME: first bug hashSum algorithm exploit (решается через скользящий хеш)
-// -----------------------------------FIRST BUG-----------------------------------
-    // for (int i = 1; i < 11; ++i)
-    // {
-    //     stackPush(&stack, i);
-    // }
-    // stackDump(&stack);
-    // stackElem_t temp = stack.data[3];
-    // stack.data[3] = stack.data[6];
-    // stack.data[6] = temp;
-    // stackDump(&stack);
-// -------------------------------------------------------------------------------
 
 //FIXME: second bug hashSumCtor is opened to the user
 // ----------------------------------SECOND BUG-----------------------------------
