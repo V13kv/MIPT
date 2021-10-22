@@ -24,7 +24,7 @@ prog.exe: $(OBJECTS)
 $(BinDir)/main.o: $(SrcDir)/main.cpp $(IncDir)/stack.h
 	g++ -c $(SrcDir)/main.cpp $(CXXFLAGS) -o $(BinDir)/main.o
 
-$(BinDir)/stack.o: $(SrcDir)/stack.cpp $(IncDir)/hash.h
+$(BinDir)/stack.o: $(SrcDir)/stack.cpp $(IncDir)/stack.h $(IncDir)/debug.h $(IncDir)/settings.h $(IncDir)/hash.h
 	g++ -c $(SrcDir)/stack.cpp $(CXXFLAGS) -o $(BinDir)/stack.o
 
 $(BinDir)/hash.o: $(SrcDir)/hash.cpp $(IncDir)/debug.h $(IncDir)/hash.h
