@@ -5,6 +5,10 @@
 
 #include "../include/stack.h"
 
+#if defined(STACK_HASH) && STACK_HASH == 1
+    #include "../include/hash.h"
+#endif
+
 #if defined(STACK_CANARY) && STACK_CANARY == 1  
     
     EXIT_CODES canaryCtor(stack_t *stack, int stack_capacity)
@@ -71,11 +75,9 @@
     
 #endif
 
-//TODO: separate file for hashSum functions
-#if defined(STACK_HASH) && STACK_HASH == 1  
+#if defined(STACK_HASH) && STACK_HASH == 1
 
-    //TODO: rename function
-    EXIT_CODES hashSumCtor(stack_t *stack)
+    EXIT_CODES calculateStackHashSum(stack_t *stack, long long int *hashSum)
     {
         // Error check
         if (!stackBasicCheck(stack))
@@ -84,67 +86,14 @@
             return EXIT_CODES::BAD_OBJECT_PASSED;
         }
 
-        // Calculation of hash sum
-        long long int currentHashSum = 0;
-        IS_OK_WO_EXIT(calculateStackHashSum(stack, &currentHashSum));
-        
-        stack->hashSum = currentHashSum;
-
-        return EXIT_CODES::NO_ERRORS;
-    }
-
-    EXIT_CODES calculateStackHashSum(stack_t *stack, long long int *hash_sum)
-    {
-        // Error check
-        if (!stackBasicCheck(stack) || hash_sum == NULL)
-        {
-            PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_OBJECT_PASSED);
-            return EXIT_CODES::BAD_OBJECT_PASSED;
-        }
-
-        // Calculate full hash sum
+        // Calculation of stack hash
         long long int stack_hash_sum = 0;
-        IS_OK_WO_EXIT (stackHashSum (stack, &stack_hash_sum));
-
-        long long int stack_data_hash_sum = 0;
-        IS_OK_WO_EXIT (stackDataHashSum (stack, &stack_data_hash_sum));
-
-        (*hash_sum) = stack_hash_sum + stack_data_hash_sum;
-
-        return EXIT_CODES::NO_ERRORS;
-    }
-
-    EXIT_CODES stackHashSum(stack_t *stack, long long int *hash_sum)
-    {
-        // Error check
-        if (!stackBasicCheck(stack) || hash_sum == NULL)
-        {
-            PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_OBJECT_PASSED);
-            return EXIT_CODES::BAD_OBJECT_PASSED;
-        }
-
-        // Calculate structure hash sum
-        *hash_sum = 0;
-        char *stack_p = (char *) stack;
         unsigned long long stack_total_bytes = sizeof(stack_t) - sizeof(stack->hashSum);
-        for (unsigned long long byte = 0; byte < stack_total_bytes; ++byte)
-        {
-            (*hash_sum) += stack_p[byte] * byte;
-        }
+        IS_OK_WO_EXIT(calculateHashSum(stack, stack_total_bytes, &stack_hash_sum));
 
-        return EXIT_CODES::NO_ERRORS;
-    }
+        // Calculation of stack data hash
+        long long int stack_data_hash_sum = 0;
 
-    EXIT_CODES stackDataHashSum(stack_t *stack, long long int *hash_sum)
-    {
-        // Error check
-        if (!stackBasicCheck(stack) || hash_sum == NULL)
-        {
-            PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_OBJECT_PASSED);
-            return EXIT_CODES::BAD_OBJECT_PASSED;
-        }
-
-        // Calculate data hash sum
         long long int data_total_bytes = stack->capacity * sizeof(stackElem_t);
         #if defined(STACK_CANARY) && STACK_CANARY == 1
             data_total_bytes += sizeof(stack->canaryLeft) + sizeof(stack->canaryRight);
@@ -154,16 +103,15 @@
             char *data_p = (char *) stack->data;
         #endif
 
-        *hash_sum = 0; 
-        for (long long byte = 0; byte < data_total_bytes; ++byte)
-        {
-            (*hash_sum) += data_p[byte] * byte;
-        }
-     
+        IS_OK_WO_EXIT(calculateHashSum(data_p, data_total_bytes, &stack_data_hash_sum));
+        
+        // Get entire stack + stack->data hash sum
+        *hashSum = stack_hash_sum + stack_data_hash_sum;
+
         return EXIT_CODES::NO_ERRORS;
     }
 
-    EXIT_CODES hashCheck(stack_t *stack, bool *result)
+    EXIT_CODES stackHashCheck(stack_t *stack, bool *result)
     {
         // Error check
         if (!stackBasicCheck(stack) || result == NULL)
@@ -211,7 +159,7 @@ bool stackOk(stack_t *stack)
 
     #if defined(STACK_HASH) && STACK_HASH == 1  
         bool hash_is_ok = true;
-        IS_OK_WO_EXIT(hashCheck(stack, &hash_is_ok));
+        IS_OK_WO_EXIT(stackHashCheck(stack, &hash_is_ok));
 
         result = result && hash_is_ok;
     #endif
@@ -304,7 +252,7 @@ EXIT_CODES stackCtor(stack_t *stack, int stack_capacity)
 
     // Construct hasSum field
     #if defined(STACK_HASH) && STACK_HASH == 1
-        IS_OK_W_EXIT(hashSumCtor(stack));
+        IS_OK_W_EXIT(calculateStackHashSum(stack, &stack->hashSum));
     #endif
 
     return EXIT_CODES::NO_ERRORS;
@@ -386,7 +334,7 @@ EXIT_CODES stackReallocation(stack_t *stack, REALLOC_MODES mode)
 
     // Update hash sum
     #if defined(STACK_HASH) && STACK_HASH == 1
-        IS_OK_W_EXIT(hashSumCtor(stack));
+        IS_OK_W_EXIT(calculateStackHashSum(stack, &stack->hashSum));
     #endif
 
     // Error check
@@ -409,7 +357,7 @@ EXIT_CODES stackPush(stack_t *stack, stackElem_t value)
 
     // Update hash sum
     #if defined(STACK_HASH) && STACK_HASH == 1
-        IS_OK_W_EXIT(hashSumCtor(stack));
+        IS_OK_W_EXIT(calculateStackHashSum(stack, &stack->hashSum));
     #endif
 
     // Error check
@@ -453,7 +401,7 @@ EXIT_CODES stackPop(stack_t *stack, stackElem_t *popTo)
 
     // Update hash sum
     #if defined(STACK_HASH) && STACK_HASH == 1
-        IS_OK_W_EXIT(hashSumCtor(stack));
+        IS_OK_W_EXIT(calculateStackHashSum(stack, &stack->hashSum));
     #endif
 
     // Error check
@@ -463,6 +411,7 @@ EXIT_CODES stackPop(stack_t *stack, stackElem_t *popTo)
 }
 
 #if defined(STACK_DEBUG_LEVEL) && STACK_DEBUG_LEVEL == 2
+    
     EXIT_CODES stackDump(stack_t *stack)
     {
         if (stack == NULL)
@@ -527,6 +476,7 @@ EXIT_CODES stackPop(stack_t *stack, stackElem_t *popTo)
 
         return EXIT_CODES::NO_ERRORS;
     }
+    
 #endif
 
 EXIT_CODES stackDtor(stack_t *stack)
