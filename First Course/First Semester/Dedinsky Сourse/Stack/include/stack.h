@@ -68,11 +68,8 @@ struct stack_t
 #endif
 
 #if STACK_HASH == 1
-    // EXIT_CODES stackHashSum(stack_t *stack, long long int *hash_sum);
-    // EXIT_CODES stackDataHashSum(stack_t *stack, long long int *hash_sum);
-    // EXIT_CODES calculateStackHashSum(stack_t *stack, long long int *hash_sum);
-    EXIT_CODES hashCheck(stack_t *stack, bool *result);
-    // EXIT_CODES hashSumCtor(stack_t *stack);
+    EXIT_CODES calculateStackHashSum(stack_t *stack, long long int *hashSum);
+    EXIT_CODES stackHashCheck(stack_t *stack, bool *result);
 #endif
 
 #if STACK_CANARY == 1 || STACK_HASH == 1
