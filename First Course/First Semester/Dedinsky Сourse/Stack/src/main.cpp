@@ -3,23 +3,6 @@
 
 #include "../include/stack.h"
 
-
-//FIXME: second bug hashSumCtor is opened to the user
-// ----------------------------------SECOND BUG-----------------------------------
-    // for (int i = 1; i < 11; ++i)
-    // {
-    //     stackPush(&stack, i);
-    // }
-    // long long protection_bytes = sizeof(stack.canaryLeft) + sizeof(stack.canaryRight);
-    // stack.data = (stackElem_t *) calloc(stack.capacity * sizeof(stackElem_t) + protection_bytes, sizeof(stackElem_t));
-    // int *canaryLeft = (int *) stack.data;
-    // *canaryLeft = CANARY_VALUE;
-    // int *canaryRight = (int *) (((char *) stack.data) + sizeof(stack.canaryLeft) + stack.capacity * sizeof(stackElem_t));
-    // *canaryRight = CANARY_VALUE;
-    // stack.data = (stackElem_t *) (((char *) stack.data) + sizeof(stack.canaryLeft));
-    // hashSumCtor(&stack);
-// -------------------------------------------------------------------------------
-
 //TODO: support of any structures, elements, objects in stack
 int main(void)
 {
