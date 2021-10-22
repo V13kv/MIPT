@@ -7,35 +7,33 @@
 #endif
 
 #include "../include/text.h"
-#include "../include/lines.h"
 
-//FIXME: combine test_st and text_line_st
-//TODO: replace malloc on calloc on Linux and etc. (do macros, e.g. )
+#include "../include/lines_sort.h"
+
 int main()
 {
+    // For cyrillic support
     #ifdef _WIN32
-        // For cyrillic support
         SetConsoleCP(1251);
         SetConsoleOutputCP(1251);
     #endif
 
     // Create text object
-    text_st text = {};
-    text_st_constructor(&text, "../Onegin.txt");  // TODO: Add parameters to interact with lines
+    text_t text = {};
+    textCtor(&text, "Onegin.txt", FILE_MODE::R);
 
-    // Get text lines
-    text_line_st *lines = get_text_lines(&text);
+    // Save original text
+    exportTextObject(&text, "OneginOUTPUT.txt", FILE_MODE::W);
 
-    // Sort lines in lexicographic order
-    my_qsort(lines, 0, text.lines_count, reversedLinesComparison);
-    //qsort(lines, text.lines_count, sizeof(text_line_st), directLinesComparison);
+    // Sort lines in direct lexicographic order && Save sorted lines to files
+    my_qsort(&text, directLinesComparison);
+    exportTextObject(&text, "OneginOUTPUT.txt", FILE_MODE::A);
 
-    // Save sorted lines to files
-    export_text_line_objects(lines, text.lines_count, "../OneginOUTPUT.txt");  // TODO: выходной файл с трёмя текстами (direct, reversed, original)
+    // Sort lines in direct lexicographic order && Save sorted lines to files
+    my_qsort(&text, reversedLinesComparison);
+    exportTextObject(&text, "OneginOUTPUT.txt", FILE_MODE::A);
 
-    // Close all opened files and free allocated memory
-    text_st_deconstructor(&text);
-    free(lines);
+    textDtor(&text);
 
     return 0;
 }
