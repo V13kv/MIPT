@@ -1,0 +1,10 @@
+push 1 2
+push 1
+pop
+mul
+sub
+add
+div
+out
+halt
+in
