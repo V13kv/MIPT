@@ -8,3 +8,6 @@ div
 out
 halt
 in
+push 3
+push 16
+push 4
