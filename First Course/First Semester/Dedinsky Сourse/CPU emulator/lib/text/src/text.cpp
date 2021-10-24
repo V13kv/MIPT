@@ -56,8 +56,9 @@ void textCtor(text_t *text, const char *file_path, const FILE_MODE mode)
     deleteEmptyLines(data);
 
     // Get text size
-    size = strlen(data);
-    assert(size != 0 && "[!] Got a null pointer after strlen function!");
+    size = file_capacity;
+    // size = strlen(data);
+    // assert(size != 0 && "[!] Got a null pointer after strlen function!");
 
     // Get total amount of non-empty lines
     const int lines_count = getTotalAmountOfLines(data);
