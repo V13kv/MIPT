@@ -1,20 +1,30 @@
 #include "../../lib/text/include/text.h"
-#include "../../include/mydisasm/disassembler.h"
+#include "../../lib/stack/include/stack.h"
 
 void hint();
 char *getFileName(int argc, char *argv[]);
 
 int main(int argc, char *argv[])
 {
+    // Read translated byteCode
     text_t byteCode = {};
     textCtor(&byteCode, getFileName(argc, argv), FILE_MODE::RB);
 
-    disassembly(&byteCode, "code.lst");
+    // Create stack
+    stack_t stack = {};
+    stackCtor(&stack);
+
+    // Create RAM
+    ram_t ram = {};
+    ramCtor(&ram);
+
 
     textDtor(&byteCode);
+    stackDtor(&stack);
 
     return 0;
 }
+
 
 void hint()
 {
@@ -36,3 +46,4 @@ char *getFileName(int argc, char *argv[])
 
     return file_name;
 }
+

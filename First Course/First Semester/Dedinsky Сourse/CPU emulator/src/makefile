@@ -27,7 +27,8 @@ TextIncDir 	= $(LibDir)/text/include
 
 AsmBinDir 	= myasm/bin
 AsmSrcDir 	= myasm
-ASM_OBJECTS = $(AsmBinDir)/main.o $(AsmBinDir)/assembler.o $(TextBinDir)/text.o $(TextBinDir)/file.o $(TextBinDir)/lines_sort.o
+ASM_OBJECTS = 	$(AsmBinDir)/main.o $(AsmBinDir)/assembler.o $(TextBinDir)/text.o \
+				$(TextBinDir)/file.o $(TextBinDir)/lines_sort.o commands.o
 
 asm.exe: $(ASM_OBJECTS)
 	g++ $(ASM_OBJECTS) -o $(BinDir)/myasm/asm.exe
@@ -35,8 +36,11 @@ asm.exe: $(ASM_OBJECTS)
 $(AsmBinDir)/main.o: $(AsmSrcDir)/main.cpp $(TextIncDir)/text.h $(IncDir)/myasm/assembler.h
 	g++ -c $(AsmSrcDir)/main.cpp $(CXXFLAGS) -o $(AsmBinDir)/main.o
 
-$(AsmBinDir)/assembler.o: $(AsmSrcDir)/assembler.cpp $(IncDir)/myasm/assembler.h $(IncDir)/commands.h
+$(AsmBinDir)/assembler.o: $(AsmSrcDir)/assembler.cpp $(IncDir)/myasm/assembler.h $(IncDir)/commands.h $(IncDir)/asm_general.h
 	g++ -c $(AsmSrcDir)/assembler.cpp $(CXXFLAGS) -o $(AsmBinDir)/assembler.o
+
+commands.o: commands.cpp $(IncDir)/commands.h $(DebugDir)/debug.h
+	g++ -c commands.cpp $(CXXFLAGS)  -o commands.o
 
 $(TextBinDir)/text.o: $(TextSrcDir)/text.cpp $(TextIncDir)/text.h $(TextIncDir)/file.h
 	g++ -c $(TextSrcDir)/text.cpp $(CXXFLAGS) -o $(TextBinDir)/text.o
@@ -51,7 +55,7 @@ $(TextBinDir)/lines_sort.o: $(TextSrcDir)/lines_sort.cpp $(TextIncDir)/lines_sor
 DisAsmBinDir 	= mydisasm/bin
 DisAsmSrcDir 	= mydisasm
 DISASM_OBJECTS 	= 	$(DisAsmBinDir)/main.o $(DisAsmBinDir)/disassembler.o $(TextBinDir)/text.o \
-					$(TextBinDir)/file.o $(TextBinDir)/lines_sort.o
+					$(TextBinDir)/file.o $(TextBinDir)/lines_sort.o commands.o
 
 disasm.exe: $(DISASM_OBJECTS)
 	g++ $(DISASM_OBJECTS) -o $(BinDir)/mydisasm/disasm.exe
@@ -59,5 +63,5 @@ disasm.exe: $(DISASM_OBJECTS)
 $(DisAsmBinDir)/main.o: $(DisAsmSrcDir)/main.cpp $(TextIncDir)/text.h $(IncDir)/mydisasm/disassembler.h
 	g++ -c $(DisAsmSrcDir)/main.cpp $(CXXFLAGS) -o $(DisAsmBinDir)/main.o
 
-$(DisAsmBinDir)/disassembler.o: $(DisAsmSrcDir)/disassembler.cpp $(IncDir)/mydisasm/disassembler.h $(IncDir)/commands.h
+$(DisAsmBinDir)/disassembler.o: $(DisAsmSrcDir)/disassembler.cpp $(IncDir)/mydisasm/disassembler.h $(IncDir)/commands.h $(IncDir)/asm_general.h
 	g++ -c $(DisAsmSrcDir)/disassembler.cpp $(CXXFLAGS) -o $(DisAsmBinDir)/disassembler.o

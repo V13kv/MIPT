@@ -1,9 +1,9 @@
-push 1 2
-push 1
+push [bx+32]
+push [dx+32.1]
+add
 pop
 mul
 sub
-add
 div
 out
 halt
