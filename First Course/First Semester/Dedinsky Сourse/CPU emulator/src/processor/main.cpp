@@ -1,30 +1,28 @@
 #include "../../lib/text/include/text.h"
-#include "../../lib/stack/include/stack.h"
+#include "../../include/processor/processor.h"
 
 void hint();
 char *getFileName(int argc, char *argv[]);
 
 int main(int argc, char *argv[])
 {
-    // Read translated byteCode
+    // Read bytecode
     text_t byteCode = {};
     textCtor(&byteCode, getFileName(argc, argv), FILE_MODE::RB);
 
-    // Create stack
-    stack_t stack = {};
-    stackCtor(&stack);
+    // Init processor
+    processor_t *cpu = {};
+    cpuCtor(&cpu);
 
-    // Create RAM
-    ram_t ram = {};
-    ramCtor(&ram);
-
+    // Execution
+    // TODO: implementation
+    //execute(&byteCode, &cpu);
 
     textDtor(&byteCode);
-    stackDtor(&stack);
+    cpuDtor(&cpu);
 
     return 0;
 }
-
 
 void hint()
 {

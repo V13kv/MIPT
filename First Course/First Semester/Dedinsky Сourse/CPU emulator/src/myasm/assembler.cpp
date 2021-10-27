@@ -2,12 +2,11 @@
 #include <string.h>  // for memset
 
 //TODO: compiler flag (убрать ../../)
-#include "../../include/asm_general.h"
 #include "../../include/myasm/assembler.h"
 #include "../../include/commands.h"
 
 // TODO: encode jmp properly, call instructions (separate labels and register names)
-EXIT_CODES encodeCommand(command_t *const command, char *encodedCommand)
+EXIT_CODES encodeCommand(command_t *const command, char *const encodedCommand)
 {
     // Error check
     if (command == NULL || encodedCommand == NULL)
@@ -59,7 +58,7 @@ EXIT_CODES encodeCommand(command_t *const command, char *encodedCommand)
     return EXIT_CODES::NO_ERRORS;
 }
 
-EXIT_CODES exportEncodedCommand(char *encodedCommand, int bytesToExport, FILE *fs)
+EXIT_CODES exportEncodedCommand(const char *const encodedCommand, const int bytesToExport, FILE *fs)
 {
     // Error check
     if (encodedCommand == NULL || fs == NULL)
@@ -75,7 +74,7 @@ EXIT_CODES exportEncodedCommand(char *encodedCommand, int bytesToExport, FILE *f
 }
 
 // TODO: support of two arguments separated ','
-EXIT_CODES parseLine(text_line_t *line, command_t *command)
+EXIT_CODES parseLine(const text_line_t *const line, command_t *const command)
 {
     // Error check
     if (line == NULL || command == NULL)
@@ -100,17 +99,17 @@ EXIT_CODES parseLine(text_line_t *line, command_t *command)
     return EXIT_CODES::NO_ERRORS;
 }
 
-EXIT_CODES translateCode(text_t *text, const char *const output_file_name)
+EXIT_CODES assembly(const text_t *const code, const char *const output_file_name)
 {
     // Error check
-    if (text == NULL || text->lines == NULL || output_file_name == NULL)
+    if (code == NULL || code->lines == NULL || output_file_name == NULL)
     {
         PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_OBJECT_PASSED);
         return EXIT_CODES::BAD_OBJECT_PASSED;
     }
-    for (int line = 0; line < text->lines_count; ++line)
+    for (int line = 0; line < code->lines_count; ++line)
     {
-        if (text->lines[line].beginning == NULL)
+        if (code->lines[line].beginning == NULL)
         {
             PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_OBJECT_PASSED);
             return EXIT_CODES::BAD_OBJECT_PASSED;
@@ -128,9 +127,9 @@ EXIT_CODES translateCode(text_t *text, const char *const output_file_name)
     // Parse each source code line
     command_t command = {};
     char encodedCommand[MAX_ENCODED_COMMAND_LENGTH] = {};
-    for (int line = 0; line < text->lines_count; ++line)
+    for (int line = 0; line < code->lines_count; ++line)
     {
-        IS_OK_W_EXIT(parseLine(&text->lines[line], &command));
+        IS_OK_W_EXIT(parseLine(&code->lines[line], &command));
         IS_OK_W_EXIT(encodeCommand(&command, encodedCommand));       
         IS_OK_W_EXIT(exportEncodedCommand(encodedCommand, command.bytes, fs));
       

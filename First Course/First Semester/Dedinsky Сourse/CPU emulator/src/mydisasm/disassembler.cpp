@@ -1,11 +1,10 @@
 #include <stdlib.h>  // for calloc
 #include <string.h>  // for strlen && strcpy
 
-#include "../../include/asm_general.h"
 #include "../../include/mydisasm/disassembler.h"
 #include "../../include/commands.h"
 
-EXIT_CODES decodeCommandArgs(char *byteCode, command_t *command)
+EXIT_CODES decodeCommandArgs(char *byteCode, command_t *const command)
 {
     // Error check
     if (byteCode == NULL || command == NULL)
@@ -50,7 +49,7 @@ EXIT_CODES decodeCommandArgs(char *byteCode, command_t *command)
     return EXIT_CODES::NO_ERRORS;
 }
 
-EXIT_CODES decodeCommand(char *byteCode, command_t *command)
+EXIT_CODES decodeCommand(char *byteCode, command_t *const command)
 {
     // Error check
     if (byteCode == NULL || command == NULL)
@@ -81,7 +80,7 @@ EXIT_CODES decodeCommand(char *byteCode, command_t *command)
     return EXIT_CODES::NO_ERRORS;
 }
 
-EXIT_CODES exportDecodedCommand(command_t *command, FILE *fs)
+EXIT_CODES exportDecodedCommand(const command_t *const command, FILE *fs)
 {
     // Error check
     if (command == NULL || fs == NULL)
@@ -99,7 +98,7 @@ EXIT_CODES exportDecodedCommand(command_t *command, FILE *fs)
     return EXIT_CODES::NO_ERRORS;
 }
 
-EXIT_CODES disassembly(text_t *byteCode, const char *const output_file_name)
+EXIT_CODES disassembly(const text_t *const byteCode, const char *const output_file_name)
 {
     // Error check
     if (byteCode == NULL || byteCode->data == NULL || output_file_name == NULL)
@@ -119,7 +118,7 @@ EXIT_CODES disassembly(text_t *byteCode, const char *const output_file_name)
     // TODO: сделать размер константного размера либо каллок, чтобы не каллочить в цикле и не фришить в цикле
     // Parse bytecode
     command_t command = {};
-    for (int byte = 0; byte < byteCode->size; byte += command.bytes)//command.arguments_count + 1)
+    for (size_t byte = 0; byte < byteCode->size; byte += command.bytes)//command.arguments_count + 1)
     {
         IS_OK_W_EXIT(resetCommand(&command));
 

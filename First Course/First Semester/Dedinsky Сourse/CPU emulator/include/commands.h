@@ -4,19 +4,16 @@
 #define DEBUG_LEVEL 1
 #include "../lib/debug/debug.h"
 
-#define MAX_ENCODED_COMMAND_LENGTH  20
-#define MAX_MNEMONICS_STR_LENGTH    20
-#define MAX_ARGUMENTS_STR_LENGTH    20
+#include "constants.h"
 
-// TODO: void * (for double, int etc argument support)
 struct command_t
 {
-    char    mnemonics[MAX_MNEMONICS_STR_LENGTH]         = {0};
-    int     opcode                                      = -1;
-    int     MRI                                         = 0;  // Memory, Register, Immediate
-    int     arguments_count                             = -1;
-    char    arguments[MAX_ARGUMENTS_STR_LENGTH]         = {0};
-    int     bytes                                       = 0;
+    char    mnemonics[MAX_MNEMONICS_STR_LENGTH] = {0};
+    int     opcode                              = -1;
+    int     MRI                                 = 0;  // Memory, Register, Immediate
+    int     arguments_count                     = -1;
+    char    arguments[MAX_ARGUMENTS_STR_LENGTH] = {0};
+    int     bytes                               = 0;
 };
 
 enum class COMMAND_OPCODES
@@ -52,11 +49,16 @@ const command_t commands_table[(int) COMMAND_OPCODES::TOTAL_COMMANDS] = {
     {"in", (int) COMMAND_OPCODES::IN, (int) COMMAND_ARG_COUNT::ZERO},
 };
 
+#define GET_ARGS_COUNT_VIA_MRI(commandMRI)          (commandMRI & 0b001) + ((commandMRI & 0b010) >> 1)
+#define MRI_HAS_IMMEDIATE(commandMRI)               !!(commandMRI & 0b001)
+#define MRI_HAS_REGISTER(commandMRI)                !!(commandMRI & 0b010)
+#define MRI_HAS_MEMORY(commandMRI)                  !!(commandMRI & 0b100)
+#define GET_MNEMONICS(opcode)                       commands_table[opcode].mnemonics
 
-EXIT_CODES getMnemonicsOpcode(char *mnemonics, int *opcode);
-EXIT_CODES getCommandMRI(const command_t *const command, int *mri);
-EXIT_CODES getCommandArgImmValue(const command_t *const command, double *imm);
-EXIT_CODES getCommandArgRegisterOpcode(const command_t *const command, int *regOpcode);
+EXIT_CODES getMnemonicsOpcode(const char *const mnemonics, int *const opcode);
+EXIT_CODES getCommandMRI(const command_t *const command, int *const mri);
+EXIT_CODES getCommandArgImmValue(const command_t *const command, double *const imm);
+EXIT_CODES getCommandArgRegisterOpcode(const command_t *const command, int *const regOpcode);
 
 EXIT_CODES resetCommand(command_t *command);
 

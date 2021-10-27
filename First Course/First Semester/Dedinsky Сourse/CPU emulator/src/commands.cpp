@@ -3,9 +3,9 @@
 #include <string.h>  // for strcmp && strlen && strstr && memset
 
 #include "../include/commands.h"
-#include "../include/asm_general.h"
+#include "../include/registers.h"
 
-EXIT_CODES getMnemonicsOpcode(char *mnemonics, int *opcode)
+EXIT_CODES getMnemonicsOpcode(const char *const mnemonics, int *const opcode)
 {
     // Error check
     if (mnemonics == NULL || opcode == NULL)
@@ -28,7 +28,7 @@ EXIT_CODES getMnemonicsOpcode(char *mnemonics, int *opcode)
     return EXIT_CODES::BAD_OBJECT_PASSED;
 }
 
-EXIT_CODES getCommandMRI(const command_t *const command, int *mri)
+EXIT_CODES getCommandMRI(const command_t *const command, int *const mri)
 {
     // Error check
     if (command == NULL || mri == NULL)
@@ -58,7 +58,7 @@ EXIT_CODES getCommandMRI(const command_t *const command, int *mri)
     return EXIT_CODES::NO_ERRORS;
 }
 
-EXIT_CODES getCommandArgImmValue(const command_t *const command, double *imm)
+EXIT_CODES getCommandArgImmValue(const command_t *const command, double *const imm)
 {
     // Error check
     if (command == NULL || imm == NULL)
@@ -80,7 +80,7 @@ EXIT_CODES getCommandArgImmValue(const command_t *const command, double *imm)
     return EXIT_CODES::NO_ERRORS;
 }
 
-EXIT_CODES getCommandArgRegisterOpcode(const command_t *const command, int *regOpcode)
+EXIT_CODES getCommandArgRegisterOpcode(const command_t *const command, int *const regOpcode)
 {
     // Error check
     if (command == NULL || regOpcode == NULL)
@@ -103,7 +103,7 @@ EXIT_CODES getCommandArgRegisterOpcode(const command_t *const command, int *regO
     return EXIT_CODES::BAD_OBJECT_PASSED;
 }
 
-EXIT_CODES resetCommand(command_t *command)
+EXIT_CODES resetCommand(command_t * command)
 {
     // Error check
     if (command == NULL)

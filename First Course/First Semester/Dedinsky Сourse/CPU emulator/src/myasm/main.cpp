@@ -5,15 +5,12 @@ void hint();
 char *getFileName(int argc, char *argv[]);
 
 // TODO: во внутренний буфер класть label'ы 
-
-//TODO: my asm code syntax checker
-
 int main(int argc, char *argv[])
 {
     text_t code = {};
     textCtor(&code, getFileName(argc, argv), FILE_MODE::R);
 
-    translateCode(&code, "asm.bin");
+    assembly(&code, "asm.bin");
 
     textDtor(&code);
 
