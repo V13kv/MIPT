@@ -7,18 +7,17 @@
 #include "../../lib/debug/debug.h"
 
 #include "../../lib/text/include/text.h"
-#include "../../lib/stack/include/stack.h"
+// #include "../../lib/stack/include/stack.h"
 #include "../registers.h"
 
 
 struct processor_t
 {
-    stack_t *stack = {};
-    const register_t *const regs = registers;
+    register_t *const regs = registers;
 };
 
-EXIT_CODES cpuCtor(processor_t *cpu);
-EXIT_CODES cpuDtor(processor_t *cpu);
+// EXIT_CODES cpuCtor(processor_t *cpu);
+// EXIT_CODES cpuDtor(processor_t *cpu);
 
 EXIT_CODES execute(text_t *byteCode, processor_t *cpu);
 

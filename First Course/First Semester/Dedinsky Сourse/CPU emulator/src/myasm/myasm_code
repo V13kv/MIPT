@@ -1,4 +1,5 @@
-push [bx+32]
+add
+push bx
 push [dx+32.1]
 add
 pop

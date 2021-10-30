@@ -6,14 +6,20 @@
 
 #include "constants.h"
 
+enum class COMMAND_EXIT_CODES
+{
+    WRONG_COMMAND_FORMAT,
+
+};
+
 struct command_t
 {
-    char    mnemonics[MAX_MNEMONICS_STR_LENGTH] = {0};
-    int     opcode                              = -1;
-    int     MRI                                 = 0;  // Memory, Register, Immediate
-    int     arguments_count                     = -1;
-    char    arguments[MAX_ARGUMENTS_STR_LENGTH] = {0};
-    int     bytes                               = 0;
+    char    mnemonics[MAX_MNEMONICS_STR_LENGTH]                             = {0};
+    int     opcode                                                          = -1;
+    int     MRI                                                             = 0;  // Memory, Register, Immediate
+    int     arguments_count                                                 = -1;
+    char    arguments[MAX_ARGUMENTS_PER_COMMAND][MAX_ARGUMENT_STR_LENGTH]   = {};
+    int     bytes                                                           = 0;
 };
 
 enum class COMMAND_OPCODES
@@ -27,6 +33,7 @@ enum class COMMAND_OPCODES
     DIV,
     OUT,
     IN,
+    JMP,
     TOTAL_COMMANDS
 };
 
@@ -47,12 +54,16 @@ const command_t commands_table[(int) COMMAND_OPCODES::TOTAL_COMMANDS] = {
     {"div", (int) COMMAND_OPCODES::DIV, (int) COMMAND_ARG_COUNT::ZERO},
     {"out", (int) COMMAND_OPCODES::OUT, (int) COMMAND_ARG_COUNT::ZERO},
     {"in", (int) COMMAND_OPCODES::IN, (int) COMMAND_ARG_COUNT::ZERO},
+    {"jmp", (int) COMMAND_OPCODES::JMP, (int) COMMAND_ARG_COUNT::ONE},
 };
 
-#define GET_ARGS_COUNT_VIA_MRI(commandMRI)          (commandMRI & 0b001) + ((commandMRI & 0b010) >> 1)
-#define MRI_HAS_IMMEDIATE(commandMRI)               !!(commandMRI & 0b001)
-#define MRI_HAS_REGISTER(commandMRI)                !!(commandMRI & 0b010)
+// #define GET_ARGS_COUNT_VIA_MRI(commandMRI)          (commandMRI & 0b001) + ((commandMRI & 0b010) >> 1)
+#define SET_MRI_MEMORY(commandMRI)                  commandMRI |= 0b100
+#define SET_MRI_REGISTER(commandMRI)                commandMRI |= 0b010
+#define SET_MRI_IMMEDIATE(commandMRI)               commandMRI |= 0b001
 #define MRI_HAS_MEMORY(commandMRI)                  !!(commandMRI & 0b100)
+#define MRI_HAS_REGISTER(commandMRI)                !!(commandMRI & 0b010)
+#define MRI_HAS_IMMEDIATE(commandMRI)               !!(commandMRI & 0b001)
 #define GET_MNEMONICS(opcode)                       commands_table[opcode].mnemonics
 
 EXIT_CODES getMnemonicsOpcode(const char *const mnemonics, int *const opcode);

@@ -21,5 +21,6 @@ EXIT_CODES decodeCommand(char *byteCode, command_t *const command);
 EXIT_CODES decodeCommandArgs(char *byteCode, command_t *const command);
 
 EXIT_CODES exportDecodedCommand(const command_t *const command, FILE *fs);
+EXIT_CODES exportBeautifiedArgs(const command_t *const command, FILE *fs);
 
 #endif  // DISASSEMBLER_H

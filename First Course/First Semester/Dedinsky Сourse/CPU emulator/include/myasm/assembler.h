@@ -14,7 +14,7 @@
 #define ENCODE_COMMAND_MRI(commandMRI)              commandMRI << 5
 
 EXIT_CODES assembly(const text_t *const code, const char *const output_file_name);
-EXIT_CODES parseLine(const text_line_t *const line, command_t *const command);
+EXIT_CODES parseCommand(const text_line_t *const line, command_t *const command);
 EXIT_CODES encodeCommand(command_t *const command, char *const encodedCommand);
 
 EXIT_CODES exportEncodedCommand(const char *const encodedCommand, const int bytesToExport, FILE *fs);

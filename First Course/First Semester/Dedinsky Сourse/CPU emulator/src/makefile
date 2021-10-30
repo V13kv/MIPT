@@ -51,7 +51,7 @@ $(TextBinDir)/file.o: $(TextSrcDir)/file.cpp $(TextIncDir)/file.h
 DisAsmBinDir 	= mydisasm/bin
 DisAsmSrcDir 	= mydisasm
 DISASM_OBJECTS 	= 	$(DisAsmBinDir)/main.o $(DisAsmBinDir)/disassembler.o $(TextBinDir)/text.o \
-					$(TextBinDir)/file.o $(TextBinDir)/lines_sort.o commands.o
+					$(TextBinDir)/file.o commands.o
 
 disasm.exe: $(DISASM_OBJECTS)
 	g++ $(DISASM_OBJECTS) -o $(BinDir)/mydisasm/disasm.exe
@@ -61,3 +61,17 @@ $(DisAsmBinDir)/main.o: $(DisAsmSrcDir)/main.cpp $(TextIncDir)/text.h $(IncDir)/
 
 $(DisAsmBinDir)/disassembler.o: $(DisAsmSrcDir)/disassembler.cpp $(IncDir)/mydisasm/disassembler.h $(IncDir)/commands.h
 	g++ -c $(DisAsmSrcDir)/disassembler.cpp $(CXXFLAGS) -o $(DisAsmBinDir)/disassembler.o
+
+ProcBinDir 			= processor/bin
+ProcSrcDir 			= processor
+PROCESSOR_OBJECTS	=	$(ProcBinDir)/main.o $(ProcBinDir)/processor.o $(TextBinDir)/text.o \
+						$(TextBinDir)/file.o $(LibDir)/stack/bin/stack.o
+
+processor.exe: $(PROCESSOR_OBJECTS)
+	g++ $(PROCESSOR_OBJECTS) -o (BinDir)/processor/processor.exe
+
+$(ProcBinDir)/main.o: $(ProcSrcDir)/main.cpp $(TextIncDir)/text.h $(IncDir)/processor/processor.h
+	g++ $(ProcSrcDir)/main.cpp $(CXXFLAGS) -o $(ProcBinDir)/main.odr
+
+$(ProcBinDir)/processor.o: $(ProcSrcDir)/processor.cpp $(IncDir)/processor/processor.h $(TextIncDir)/text.h $(LibDir)/stack/stack.h $(IncDir)/registers.h
+	g++ -c $(ProcSrcDir)/processor.cpp $(CXXFLAGS) -o $(ProcBinDir)/processor.o

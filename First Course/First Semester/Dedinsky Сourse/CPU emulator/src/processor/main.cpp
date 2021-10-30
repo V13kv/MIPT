@@ -1,5 +1,7 @@
 #include "../../lib/text/include/text.h"
+#include "../../lib/stack/include/stack.h"
 #include "../../include/processor/processor.h"
+
 
 void hint();
 char *getFileName(int argc, char *argv[]);
@@ -10,16 +12,18 @@ int main(int argc, char *argv[])
     text_t byteCode = {};
     textCtor(&byteCode, getFileName(argc, argv), FILE_MODE::RB);
 
+    // Init stack
+    stack_t stack = {};
+    stackCtor(&stack);
+
     // Init processor
-    processor_t *cpu = {};
-    cpuCtor(&cpu);
+    processor_t cpu = {};
 
     // Execution
     // TODO: implementation
-    //execute(&byteCode, &cpu);
+    execute(&byteCode, &cpu, &stack);
 
     textDtor(&byteCode);
-    cpuDtor(&cpu);
 
     return 0;
 }

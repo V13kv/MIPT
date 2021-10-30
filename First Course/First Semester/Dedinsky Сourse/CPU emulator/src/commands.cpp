@@ -1,6 +1,6 @@
 #include <ctype.h>  // for isalpha && isdigit
 #include <stdio.h>  // for sscanf
-#include <string.h>  // for strcmp && strlen && strstr && memset
+#include <string.h>  // for strcmp && strlen && strcmp && memset
 
 #include "../include/commands.h"
 #include "../include/registers.h"
@@ -37,21 +37,16 @@ EXIT_CODES getCommandMRI(const command_t *const command, int *const mri)
         return EXIT_CODES::PASSED_OBJECT_IS_NULLPTR;
     }
     
-    // Get arguments types
-    int strLength = (int) strlen(command->arguments);
-    for (int chr = 0; chr < strLength; ++chr)
+    // Get arguments types TODO: after normal command->arguments parse
+    for (int arg = 0; arg < MAX_ARGUMENTS_PER_COMMAND; ++arg)
     {
-        if (isdigit(command->arguments[chr]))
+        if (isdigit(command->arguments[arg][0]))
         {
             *mri |= 0b001;
         }
-        else if (isalpha(command->arguments[chr]))  // For registers
+        else if (isalpha(command->arguments[arg][0]))
         {
             *mri |= 0b010;
-        }
-        else if (command->arguments[chr] == '[')  // For memory
-        {
-            *mri |= 0b100;
         }
     }
 
@@ -67,17 +62,25 @@ EXIT_CODES getCommandArgImmValue(const command_t *const command, double *const i
         return EXIT_CODES::PASSED_OBJECT_IS_NULLPTR;
     }
 
-    // Get command arg immediate value
-    if (sscanf(command->arguments, "%*[^0-9]%lf", imm) != 1)
+    // Get command arg immediate value maybe FIXME:
+    for (size_t arg = 0; arg < MAX_ARGUMENTS_PER_COMMAND; ++arg)
     {
-        if (sscanf(command->arguments, "%lf", imm) != 1)
+        if (sscanf(command->arguments[arg], "%lf", imm) == 1)
         {
-            PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_STD_FUNC_RESULT);
-            return EXIT_CODES::BAD_STD_FUNC_RESULT;
+            return EXIT_CODES::NO_ERRORS;
         }
     }
+    // if (sscanf(command->arguments, "%*[^0-9]%lf", imm) != 1)
+    // {
+    //     if (sscanf(command->arguments, "%lf", imm) != 1)
+    //     {
+    //         PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_STD_FUNC_RESULT);
+    //         return EXIT_CODES::BAD_STD_FUNC_RESULT;
+    //     }
+    // }
 
-    return EXIT_CODES::NO_ERRORS;
+    PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_OBJECT_PASSED);
+    return EXIT_CODES::BAD_OBJECT_PASSED;
 }
 
 EXIT_CODES getCommandArgRegisterOpcode(const command_t *const command, int *const regOpcode)
@@ -89,13 +92,16 @@ EXIT_CODES getCommandArgRegisterOpcode(const command_t *const command, int *cons
         return EXIT_CODES::PASSED_OBJECT_IS_NULLPTR;
     }
 
-    // Get command arg register
+    // Get command arg register maybe FIXME:
     for (int reg = 0; reg < (int) REGISTER_OPCODES::TOTAL_REGISTERS; ++reg)
     {
-        if (strstr(command->arguments, registers[reg].name))
+        for (int arg = 0; arg < MAX_ARGUMENTS_PER_COMMAND; ++arg)
         {
-            *regOpcode = registers[reg].opcode;
-            return EXIT_CODES::NO_ERRORS;
+            if (!strcmp(command->arguments[arg], registers[reg].name))
+            {
+                *regOpcode = registers[reg].opcode;
+                return EXIT_CODES::NO_ERRORS;
+            }
         }
     }
 
