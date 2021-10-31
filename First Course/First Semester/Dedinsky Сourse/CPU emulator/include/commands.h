@@ -9,7 +9,8 @@
 enum class COMMAND_EXIT_CODES
 {
     WRONG_COMMAND_FORMAT,
-
+    NO_SUCH_MNEMONICS_FOUND,
+    BAD_REGISTER_NAME,
 };
 
 struct command_t
@@ -18,7 +19,7 @@ struct command_t
     int     opcode                                                          = -1;
     int     MRI                                                             = 0;  // Memory, Register, Immediate
     int     arguments_count                                                 = -1;
-    char    arguments[MAX_ARGUMENTS_PER_COMMAND][MAX_ARGUMENT_STR_LENGTH]   = {};
+    char    arguments[MAX_ARGUMENTS_PER_COMMAND][MAX_ARGUMENT_STR_LENGTH]   = {0};
     int     bytes                                                           = 0;
 };
 
@@ -67,9 +68,9 @@ const command_t commands_table[(int) COMMAND_OPCODES::TOTAL_COMMANDS] = {
 #define GET_MNEMONICS(opcode)                       commands_table[opcode].mnemonics
 
 EXIT_CODES getMnemonicsOpcode(const char *const mnemonics, int *const opcode);
-EXIT_CODES getCommandMRI(const command_t *const command, int *const mri);
-EXIT_CODES getCommandArgImmValue(const command_t *const command, double *const imm);
 EXIT_CODES getCommandArgRegisterOpcode(const command_t *const command, int *const regOpcode);
+EXIT_CODES encodeCommandArgImmValue(const command_t *const command, char *const encodedCommand, int *encodingByte);
+// EXIT_CODES getCommandMRI(const command_t *const command, int *const mri);
 
 EXIT_CODES resetCommand(command_t *command);
 

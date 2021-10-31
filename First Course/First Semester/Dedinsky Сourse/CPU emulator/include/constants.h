@@ -7,7 +7,7 @@
 #define MAX_ARGUMENT_STR_LENGTH     20
 #define MAX_ARGUMENTS_PER_COMMAND   2
 #define MAX_REG_STR_LENGTH          2
-#define MIN_LABELS_COUNT            2
+#define MAX_LABEL_OBJECTS           50
 #define MAX_LABEL_STR_LENGTH        50   
 
 

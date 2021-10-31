@@ -1,6 +1,7 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
+#include <stdio.h>
 
 #include "../colors/colors.h"
 
@@ -21,7 +22,7 @@ enum class EXIT_CODES
     BAD_STD_FUNC_RESULT,
 };
 
-#if defined(STACK_DEBUG_LEVEL) && STACK_DEBUG_LEVEL >= 1
+#if defined(DEBUG_LEVEL) && DEBUG_LEVEL >= 1
 
     #define VALUE_CODE_TO_STR(expression)  ( !!(expression) ? GREEN"OK"RESET : RED"ERROR"RESET )
     #define STRINGIFY(object) #object

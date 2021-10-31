@@ -9,6 +9,26 @@
 #include "../../lib/text/include/text.h"
 #include "../commands.h"
 
+enum class ASM_EXIT_CODES
+{
+    LABEL_SIZE_IS_TOO_BIG,
+    MULTIPLE_LABELS_WITH_SAME_NAME,
+    BAD_LABEL_NAME,
+};
+
+enum class PARSING_MODE
+{
+    LABEL_PARSING,
+    COMMAND_PARSING,
+};
+
+struct label_t
+{
+    char name[MAX_LABEL_STR_LENGTH] = {};
+    long long int offset            = -1;
+    int length                      = -1;
+} lb;
+
 #define ENCODE_COMMAND_OPCODE(commandOpcode)        commandOpcode << 4
 #define ENCODE_COMMAND_ARGS_COUNT(commandArgsCount) commandArgsCount << 2
 #define ENCODE_COMMAND_MRI(commandMRI)              commandMRI << 5
