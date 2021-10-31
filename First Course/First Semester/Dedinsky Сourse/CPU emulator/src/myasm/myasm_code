@@ -1,8 +1,13 @@
+firstLabel:
+push [dx+32.123]
 add
+secondLabel:
+push 3
 push bx
-push [dx+32.1]
+jmp ___ThirdLabel123__
 add
 pop
+___ThirdLabel123__:
 mul
 sub
 div

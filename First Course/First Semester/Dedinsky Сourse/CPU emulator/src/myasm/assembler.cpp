@@ -30,9 +30,10 @@ EXIT_CODES encodeCommand(command_t *const command, char *const encodedCommand)
     encodedCommand[encodingByte++]  = (char) instrHeader2;
 
     // Encoding command arguments
+    //TODO: multiple registers support
     if (MRI_HAS_REGISTER(command->MRI))
     {
-        int regOpcode = -1;
+        int regOpcode = (int) REGISTER_OPCODES::INVALID_OPCODE;
         IS_OK_W_EXIT(getCommandArgRegisterOpcode(command, &regOpcode));
         
         encodedCommand[encodingByte++] = (char) regOpcode;
@@ -40,16 +41,15 @@ EXIT_CODES encodeCommand(command_t *const command, char *const encodedCommand)
     
     if (MRI_HAS_IMMEDIATE(command->MRI))
     {
-        double imm;
-        IS_OK_W_EXIT(getCommandArgImmValue(command, &imm));
-
-        char *cImm = (char *) &imm;
-        for (int byte = 0; byte < (int) sizeof(double); ++byte)
-        {
-            encodedCommand[encodingByte++] = *cImm++;
-        }
+        //TODO: multiple imm's support
+        IS_OK_W_EXIT(encodeCommandArgImmValue(command, encodedCommand, &encodingByte));
     }
     command->bytes = encodingByte;
+
+    if (command->opcode == (int) COMMAND_OPCODES::JMP)
+    {
+        command->bytes += sizeof(lb.offset);
+    }
 
     return EXIT_CODES::NO_ERRORS;
 }
@@ -69,25 +69,14 @@ EXIT_CODES exportEncodedCommand(const char *const encodedCommand, const int byte
     return EXIT_CODES::NO_ERRORS;
 }
 
-bool registerNameIsCorrect(char reg[])
+EXIT_CODES parseCommandArg(const text_line_t *const line, int *argInd, int *strPos, command_t *const command)
 {
-    // TODO: Error check
-
-    // Check
-    for (int i = 0; i < sizeof(registers); ++i)
+    // Error check
+    if (line == NULL || argInd == NULL || strPos == NULL || command == NULL)
     {
-        if (!strcmp(reg, registers[i].name))
-        {
-            return true;
-        }
+        PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::PASSED_OBJECT_IS_NULLPTR);
+        return EXIT_CODES::PASSED_OBJECT_IS_NULLPTR;
     }
-
-    return false;
-}
-
-EXIT_CODES parseCommandArgs(const text_line_t *const line, int *argInd, int *strPos, command_t *const command)
-{
-    // TODO: error check
 
     // Parsing
     int savedStrPos = *strPos;
@@ -98,19 +87,22 @@ EXIT_CODES parseCommandArgs(const text_line_t *const line, int *argInd, int *str
     {
         if (!registerNameIsCorrect(reg))
         {
-            // TODO: add COMMAND_EXIT_CODES::BAD_REGISTER_NAME
-            PRINT_ERROR_TRACING_MESSAGE(COMMAND_EXIT_CODES::WRONG_COMMAND_FORMAT);
+            PRINT_ERROR_TRACING_MESSAGE(COMMAND_EXIT_CODES::BAD_REGISTER_NAME);
             return EXIT_CODES::BAD_OBJECT_PASSED;
         }
-
         strcpy(command->arguments[*argInd], reg);
+
+        SET_MRI_REGISTER(command->MRI);
     }
     else if (sscanf(&line->beginning[*strPos], "%lf%n", &imm, strPos) == 1)
     {
-        char cImm[5] = {};
-        snprintf(cImm, 5, "%lf", imm);
+        char *cImm = (char *) &imm;
+        for (int byte = 0; byte < (int) sizeof(double); ++byte)
+        {
+            command->arguments[*argInd][byte] = *cImm++;
+        }
 
-        strcpy(command->arguments[*argInd], cImm);
+        SET_MRI_IMMEDIATE(command->MRI);
     }
     else 
     {
@@ -118,16 +110,125 @@ EXIT_CODES parseCommandArgs(const text_line_t *const line, int *argInd, int *str
         return EXIT_CODES::BAD_OBJECT_PASSED;
     }
     *strPos += savedStrPos;
-    ++*argInd;
+    *argInd += 1;
 
     return EXIT_CODES::NO_ERRORS;
 }
 
-// TODO: support of two arguments separated ','
-EXIT_CODES parseCommand(const text_line_t *const line, command_t *const command)//, char **labels)
+EXIT_CODES parseCommandArgs(const text_line_t *const line, command_t *const command, int *strPos)
 {
     // Error check
-    if (line == NULL || command == NULL)
+    if (line == NULL || command == NULL || strPos == NULL)
+    {
+        PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::PASSED_OBJECT_IS_NULLPTR);
+        return EXIT_CODES::PASSED_OBJECT_IS_NULLPTR;
+    }
+
+    // Parsing
+    int argInd = 0;
+    while (*strPos < line->length)
+    {
+        IS_OK_W_EXIT(parseCommandArg(line, &argInd, strPos, command));
+
+        if (line->beginning[*strPos] == '+')
+        {
+            *strPos += 1;
+        }
+        else if (line->beginning[*strPos] == ']')
+        {
+            break;
+        }
+    }
+    command->arguments_count = argInd;
+
+    return EXIT_CODES::NO_ERRORS;
+}
+
+bool isLabel(const text_line_t *const line)
+{
+    // Error check
+    if (line == NULL)
+    {
+        PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::PASSED_OBJECT_IS_NULLPTR);
+        return false;
+    }
+
+    int labelLength = 0;
+    char label[MAX_LABEL_STR_LENGTH] = {};
+    if (sscanf(line->beginning, "%[a-zA-Z0-9_]:%n", label, &labelLength))
+    {
+        if (labelLength != 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// EXIT_CODES setLabelOffset(const text_line_t *const line, label_t labels[], long long int *globalOffset)
+// {
+//     // Error check
+//     if (line == NULL || labels == NULL)
+//     {
+//         PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::PASSED_OBJECT_IS_NULLPTR);
+//         return EXIT_CODES::PASSED_OBJECT_IS_NULLPTR;
+//     }
+//     // Setting
+//     for (int label = 0; label < MAX_LABEL_OBJECTS; ++label)
+//     {
+//         if (!strcmp(line->beginning, labels[label].name))
+//         {
+//             if (labels[label].offset == -1)
+//             {
+//                 labels[label].offset = *globalOffset;
+//                 return EXIT_CODES::NO_ERRORS;
+//             }
+//             else
+//             {
+//                 PRINT_ERROR_TRACING_MESSAGE(ASM_EXIT_CODES::MULTIPLE_LABELS_WITH_SAME_NAME);
+//                 return EXIT_CODES::BAD_OBJECT_PASSED;
+//             }
+//         }
+//     }
+//     PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_OBJECT_PASSED);
+//     return EXIT_CODES::BAD_OBJECT_PASSED;
+// }
+
+EXIT_CODES setCommandArgLabel(command_t *const command, char labelName[], label_t labels[])
+{
+    // Error check
+    if (command == NULL || labels == NULL)
+    {
+        PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::PASSED_OBJECT_IS_NULLPTR);
+        return EXIT_CODES::PASSED_OBJECT_IS_NULLPTR;
+    }
+
+    // Set label
+    printf("labelName: %s\n", labelName);
+    for (int label = 0; label < sizeof(labels); ++label)
+    {
+        if (!strcmp(labelName, labels[label].name))
+        {
+            char *cLabel = (char *) labels[label].offset;
+            for (int byte = 0; byte < labels[label].length; ++byte)
+            {
+                command->arguments[0][byte] = *cLabel++;
+            }
+
+            return EXIT_CODES::NO_ERRORS;
+        }
+    }
+
+    PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_OBJECT_PASSED);
+    return EXIT_CODES::BAD_OBJECT_PASSED;
+}
+
+// Support of two arguments separated ','
+EXIT_CODES parseCommand(const text_line_t *const line, command_t *const command, label_t labels[], PARSING_MODE mode)
+{
+    // Error check
+    if (line == NULL || command == NULL || labels == NULL)
     {
         PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_OBJECT_PASSED);
         return EXIT_CODES::BAD_OBJECT_PASSED;
@@ -142,69 +243,79 @@ EXIT_CODES parseCommand(const text_line_t *const line, command_t *const command)
         return EXIT_CODES::BAD_OBJECT_PASSED;
     }
 
-    // if (!strcmp(command->mnemonics, commands_table[COMMAND_OPCODES::JMP]))
-    // {
-        
-    // }
-
-    // Parse arguments
-    if (line->beginning[strPos] == '[')
-    {
-        SET_MRI_MEMORY(command->MRI);
-        strPos++;
-    }
-
-    int argInd = 0;
-    while (strPos < line->length)
-    {
-        IS_OK_W_EXIT(parseCommandArgs(line, &argInd, &strPos, command));
-
-        if (line->beginning[strPos] == '+')
-        {
-            strPos++;
-        }
-        else if (line->beginning[strPos] == ']')
-        {
-            break;
-        }
-    }
-
-    if (MRI_HAS_MEMORY(command->MRI) && !(line->beginning[strPos] == ']'))
-    {
-        PRINT_ERROR_TRACING_MESSAGE(COMMAND_EXIT_CODES::WRONG_COMMAND_FORMAT);
-        return EXIT_CODES::BAD_OBJECT_PASSED;
-    }
-
-    // Fill `command` structure with contents of the current `line`
     IS_OK_WO_EXIT(getMnemonicsOpcode(command->mnemonics, &command->opcode));
-    IS_OK_WO_EXIT(getCommandMRI(command, &command->MRI));
-    command->arguments_count = argInd;
 
+    // Check for special instructions (jmp, TODO: call)
+    if (!strcmp(command->mnemonics, commands_table[(int) COMMAND_OPCODES::JMP].mnemonics) && (bool) mode)
+    {
+        char commandLabelName[MAX_LABEL_STR_LENGTH] = {};
+        if (sscanf(&line->beginning[strPos], "%[a-zA-Z0-9_]", commandLabelName) != 1)
+        {
+            PRINT_ERROR_TRACING_MESSAGE(ASM_EXIT_CODES::BAD_LABEL_NAME);
+            return EXIT_CODES::BAD_OBJECT_PASSED;
+        }
+        printf("command->mnemonics: %s\n", command->mnemonics);
+        IS_OK_W_EXIT(setCommandArgLabel(command, commandLabelName, labels));
+    }
+    else
+    {
+        // Get arguments
+        if (line->beginning[strPos] == '[')
+        {
+            SET_MRI_MEMORY(command->MRI);
+            ++strPos;
+        }
+
+        IS_OK_W_EXIT(parseCommandArgs(line, command, &strPos));
+        
+        if ( (!MRI_HAS_MEMORY(command->MRI) &&   line->beginning[strPos] == ']'  ) ||
+            ( MRI_HAS_MEMORY(command->MRI) && !(line->beginning[strPos] == ']') ))
+        {
+            PRINT_ERROR_TRACING_MESSAGE(COMMAND_EXIT_CODES::WRONG_COMMAND_FORMAT);
+            return EXIT_CODES::BAD_OBJECT_PASSED;
+        }
+    } 
+
+    // IS_OK_WO_EXIT(getCommandMRI(command, &command->MRI)); 
     // printf("command->mnemonics: %s\n", command->mnemonics);
     // printf("command->opcode: %d\n", command->opcode);
     // printf("command->MRI: 0x%x\n", (unsigned int) command->MRI);
     // printf("command->arguments_count: %d\n", command->arguments_count);
-    // for (int i = 0; i < command->arguments_count; ++i)
-    // {
-    //     if (command->arguments[i])
-    //     {
-    //         printf("#%d: %s\n", i, command->arguments[i]);
-    //     }
-    // }
-    // printf("\n");
+    // // for (int i = 0; i < command->arguments_count; ++i)
+    // // {
+    // //     printf("#%d: %s\n", i, command->arguments[i]);
+    // // }
+    // // printf("\n");
 
     return EXIT_CODES::NO_ERRORS;
 }
 
-// EXIT_CODES getLabel(const text_line_t *const line, char **labels)
-// {
-//     // TODO: Error check
+EXIT_CODES initLabel(const text_line_t *const line, label_t labels[], int *labelNumber, long long int globalOffset)
+{
+    // Error check
+    if (line == NULL || labels == NULL || labelNumber == NULL)
+    {
+        PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::PASSED_OBJECT_IS_NULLPTR);
+        return EXIT_CODES::PASSED_OBJECT_IS_NULLPTR;
+    }
 
-//     // Get label
-//     int strPos = 0;
-//     char label[MAX_LABEL_STR_LENGTH] = {};
-//     sscanf(line->beginning, "%[a-zA-Z0-9_]:%n", label, &strPos);
-// }
+    // Get label
+    int labelLength = 0;
+    sscanf(line->beginning, "%[a-zA-Z0-9_]:%n", labels[*labelNumber].name, &labelLength);
+    if (labelLength > MAX_LABEL_STR_LENGTH)
+    {
+        PRINT_ERROR_TRACING_MESSAGE(ASM_EXIT_CODES::LABEL_SIZE_IS_TOO_BIG);
+        return EXIT_CODES::BAD_OBJECT_PASSED;
+    }
+    else
+    {
+        labels[*labelNumber].length = --labelLength;
+        labels[*labelNumber].offset = globalOffset;
+        *labelNumber += 1;
+    }
+
+    return EXIT_CODES::NO_ERRORS;
+}
 
 EXIT_CODES assembly(const text_t *const code, const char *const output_file_name)
 {
@@ -231,34 +342,49 @@ EXIT_CODES assembly(const text_t *const code, const char *const output_file_name
         return EXIT_CODES::BAD_STD_FUNC_RESULT;
     }
 
-    // char **labels = (char **) calloc(MIN_LABELS_COUNT, sizeof(char *));
-    // for (int label = 0; label < MIN_LABELS_COUNT; ++label)
-    // {
-    //     labels[label] = (char *) calloc(1, MAX_LABEL_STR_LENGTH);
-    // }
-    // for (int line = 0; line < code->lines_count; ++line)
-    // {
-    //     IS_OK_W_EXIT(getLabel(&code->lines[line], labels));
-    // }
-
-    // Parse each source code line
+    // -----------------------------------SETUP LABELS-----------------------------------
+    // TODO: первый проход по файлу: узнать все оффсеты всех меток
+    long long int globalOffset = 0;
+    
     command_t command = {};
     char encodedCommand[MAX_ENCODED_COMMAND_LENGTH] = {};
+    
+    int labelNumber = 0;
+    label_t labels[MAX_LABEL_OBJECTS] = {};
     for (int line = 0; line < code->lines_count; ++line)
     {
-        IS_OK_W_EXIT(parseCommand(&code->lines[line], &command));//, labels));
-        IS_OK_W_EXIT(encodeCommand(&command, encodedCommand));       
-        
-        IS_OK_W_EXIT(exportEncodedCommand(encodedCommand, command.bytes, fs));
-      
-        IS_OK_W_EXIT(resetCommand(&command));
+        if (isLabel(&code->lines[line]))
+        {
+            IS_OK_W_EXIT(initLabel(&code->lines[line], labels, &labelNumber, globalOffset));
+        }
+        else
+        {
+            IS_OK_W_EXIT(parseCommand(&code->lines[line], &command, labels, PARSING_MODE::LABEL_PARSING));
+            IS_OK_W_EXIT(encodeCommand(&command, encodedCommand));  
+            globalOffset += command.bytes;
+
+            IS_OK_W_EXIT(resetCommand(&command));
+        }
     }
 
-    // for (int label = 0; label < MIN_LABELS_COUNT; ++label)
-    // {
-    //     free(labels[label]);
-    // }
-    // free(labels);  
+    for (int i = 0; i < labelNumber; ++i)
+    {
+        printf("#%d: \n\tname: %s\n\toffset: %d\n", i+1, labels[i].name, labels[i].offset);
+    }
+
+    // -----------------------------------ASSEMBLY SOURCE CODE-----------------------------------
+    // TODO: второй проход по файлу: пройтись по всем КОМАНДАМ и за-encod-ить, используя высчитанные offset'ы меток
+    for (int line = 0; line < code->lines_count; ++line)
+    {
+        if (!isLabel(&code->lines[line]))
+        {
+            IS_OK_W_EXIT(parseCommand(&code->lines[line], &command, labels, PARSING_MODE::COMMAND_PARSING));
+            IS_OK_W_EXIT(encodeCommand(&command, encodedCommand));       
+            IS_OK_W_EXIT(exportEncodedCommand(encodedCommand, command.bytes, fs));
+        
+            IS_OK_W_EXIT(resetCommand(&command));
+        }   
+    }
 
     fclose(fs);
 

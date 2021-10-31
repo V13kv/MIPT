@@ -24,10 +24,17 @@ EXIT_CODES decodeCommandArgs(char *byteCode, command_t *const command)
     {     
         // TODO: normal conversion from byteCode -> double -> char *
         double imm = GET_ENCODED_COMMAND_DOUBLE_IMM_VALUE(&byteCode[command->bytes]);
-        char cImm[5] = {0};
-        snprintf(cImm, 5, "%lf", imm);
-
-        strcpy(command->arguments[arg++], cImm);
+        
+        char *cImm = (char *) &imm;
+        for (int byte = 0; byte < (int) sizeof(double); ++byte)
+        {
+            command->arguments[arg][byte] = *cImm++;
+        }
+        ++arg;
+        // printf("imm: %lf\n", imm);
+        // char cImm[5] = {0};
+        // snprintf(cImm, 5, "%lf", imm);
+        // strcpy(command->arguments[arg++], cImm);
         
         command->bytes += (int) sizeof(double);
     }
@@ -92,8 +99,7 @@ EXIT_CODES exportBeautifiedArgs(const command_t *const command, FILE *fs)
         {
             fputs(" + ", fs);
         }
-
-        fputs(command->arguments[arg++], fs);
+        fprintf(fs, "%.3f", GET_ENCODED_COMMAND_DOUBLE_IMM_VALUE(&command->arguments[arg++]));
     }
 
     if (MRI_HAS_MEMORY(command->MRI))
