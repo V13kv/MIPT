@@ -1,16 +1,12 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "../colors/colors.h"
 
 #define DEFAULT_ERROR_TRACING_STREAM    stderr
-
-// Debug level must be defined in your file before including this library
-#pragma region DEBUG_LEVELS
-    //#define STACK_DEBUG_LEVEL 1  // Minimal debug info (only messages are shown)
-    //#define STACK_DEBUG_LEVEL 2  // Maximum debug info (messages and dumps are shown)
-#pragma endregion DEBUG_LEVELS
 
 // Universal exit codes
 enum class EXIT_CODES
@@ -21,7 +17,7 @@ enum class EXIT_CODES
     BAD_STD_FUNC_RESULT,
 };
 
-#if defined(STACK_DEBUG_LEVEL) && STACK_DEBUG_LEVEL >= 1
+#if defined(DEBUG_LEVEL) && DEBUG_LEVEL >= 1
 
     #define VALUE_CODE_TO_STR(expression)  ( !!(expression) ? GREEN"OK"RESET : RED"ERROR"RESET )
     #define STRINGIFY(object) #object
@@ -65,6 +61,16 @@ enum class EXIT_CODES
                 return EXIT_CODES::BAD_OBJECT_PASSED;                                   \
             }                                                                           \
         } while (0)
+
+    #define CHECK_SSCANF_RESULT(ret)                                            \
+        do                                                                      \
+        {                                                                       \
+            if (ret == EOF)                                                     \
+            {                                                                   \
+                PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_STD_FUNC_RESULT);   \
+                return EXIT_CODES::BAD_STD_FUNC_RESULT;                         \
+            }                                                                   \
+        } while (0)  
 
 #else
 
