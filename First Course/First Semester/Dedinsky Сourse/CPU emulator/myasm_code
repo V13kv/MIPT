@@ -1,0 +1,19 @@
+push [dx+32.123]
+firstLabel:
+add
+secondLabel:
+push 3
+push bx
+jmp ___ThirdLabel123__
+add
+pop
+___ThirdLabel123__:
+mul
+sub
+div
+out
+halt
+in
+push 3
+push 16
+push 4
