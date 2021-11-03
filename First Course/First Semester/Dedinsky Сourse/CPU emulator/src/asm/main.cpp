@@ -1,21 +1,19 @@
 #include "../../lib/text/include/text.h"
 #include "../../lib/colors/colors.h"
 
-#include "../../include/processor/processor.h"
+#include "../../include/asm/assembler.h"
 
 void hint();
 char *getFileName(int argc, char **argv);
 
 int main(int argc, char **argv)
 {
-    text_t byteCode = {};
-    textCtor(&byteCode, getFileName(argc, argv), FILE_MODE::RB);
+    text_t code = {};
+    textCtor(&code, getFileName(argc, argv), FILE_MODE::R);
 
-    // TODO: processor implementation
-    printf("byteCode.size: %llu\n", byteCode.size);
+    assembly(&code, "asm.bin");
 
-    textDtor(&byteCode);
-
+    textDtor(&code);
     return 0;
 }
 
