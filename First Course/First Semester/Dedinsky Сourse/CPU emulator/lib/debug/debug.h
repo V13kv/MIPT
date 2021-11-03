@@ -42,6 +42,8 @@ enum class EXIT_CODES
 
     #define IS_OK_W_EXIT(function) IS_OK(function, true)
 
+    #define IS_ERROR(function) if (function != EXIT_CODES::NO_ERRORS)
+
     #define PRINT_ERROR_TRACING_MESSAGE(errorMsg)                                       \
         do                                                                              \
         {                                                                               \
@@ -84,9 +86,10 @@ enum class EXIT_CODES
 
 #else
 
-    #define IS_OK(function, exitOnError)    function
-    #define IS_OK_WO_EXIT(function)         function
-    #define IS_OK_W_EXIT(function)          function
+    #define IS_OK(function, exitOnError)            function
+    #define IS_OK_WO_EXIT(function)                 function
+    #define IS_OK_W_EXIT(function)                  function
+    #define IS_ERROR(function)                      if (0)
     #define PRINT_ERROR_TRACING_MESSAGE(error_code)
     #define OBJECT_VERIFY(object, type)
     #define CHECK_SSCANF_RESULT(ret)

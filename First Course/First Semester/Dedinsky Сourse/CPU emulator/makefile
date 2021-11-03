@@ -32,11 +32,11 @@ asm.exe: $(ASM_OBJECTS)
 $(AsmBinDir)/main.o: $(AsmSrcDir)/main.cpp $(TextIncDir)/text.h $(LibDir)/colors/colors.h $(IncDir)/asm/assembler.h
 	g++ -c $(AsmSrcDir)/main.cpp $(CXXFLAGS) -o $(AsmBinDir)/main.o
 
-$(AsmBinDir)/labels.o: $(AsmSrcDir)/labels.cpp $(IncDir)/asm/labels.h $(IncDir)/asm/assembler.h
+$(AsmBinDir)/labels.o: $(AsmSrcDir)/labels.cpp $(IncDir)/asm/labels.h
 	g++ -c $(AsmSrcDir)/labels.cpp $(CXXFLAGS) -o $(AsmBinDir)/labels.o
 
-$(AsmBinDir)/assembler.o: 	$(AsmSrcDir)/assembler.cpp $(IncDir)/asm/assembler.h $(TextIncDir)/text.h $(IncDir)/asm/labels.h \
-						$(IncDir)/asm/settings.h $(LibDir)/debug/debug.h $(IncDir)/opdefs.h $(IncDir)/registers.h
+$(AsmBinDir)/assembler.o:	$(AsmSrcDir)/assembler.cpp $(IncDir)/asm/assembler.h $(TextIncDir)/text.h $(IncDir)/asm/labels.h \
+							$(IncDir)/constants.h $(IncDir)/asm/settings.h $(LibDir)/debug/debug.h $(IncDir)/opdefs.h $(IncDir)/registers.h
 	g++ -c $(AsmSrcDir)/assembler.cpp $(CXXFLAGS) -o $(AsmBinDir)/assembler.o
 
 $(TextBinDir)/text.o: $(TextSrcDir)/text.cpp $(TextIncDir)/text.h $(TextIncDir)/file.h

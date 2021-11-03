@@ -1,7 +1,7 @@
 #include <stdbool.h>
-#include <stdlib.h>  // for calloc && free && realloc
+#include <stdio.h>  // for sscanf
+#include <stdlib.h>  // for calloc && realloc && free 
 
-#include "../../include/asm/assembler.h"
 #include "../../include/asm/labels.h"
 
 EXIT_CODES labelsCtor(labels_t *labels)
@@ -69,8 +69,8 @@ EXIT_CODES expandLabelsArray(labels_t *labels)
     return EXIT_CODES::NO_ERRORS;
 }
 
-// TODO: label strip function
-EXIT_CODES initLabel(char *data, labels_t *labels, const char *LABEL_FORMAT)
+// ******TODO: label strip function
+EXIT_CODES initLabel(char *data, labels_t *labels, const char *LABEL_FORMAT, const int globalOffset)
 {
     // Error check
     if (data == NULL || labels == NULL || LABEL_FORMAT == NULL)
@@ -87,20 +87,17 @@ EXIT_CODES initLabel(char *data, labels_t *labels, const char *LABEL_FORMAT)
     CHECK_SSCANF_RESULT(ret);
     if (ret != 1)
     {
-        PRINT_ERROR_TRACING_MESSAGE(ASM_EXIT_CODES::BAD_LABEL_NAME);
+        PRINT_ERROR_TRACING_MESSAGE(LABELS_EXIT_CODES::BAD_LABEL_NAME);
         return EXIT_CODES::BAD_OBJECT_PASSED;
     }
 
     // Update `labels` fiels
-    currentLabel->offset = globalOffset; // currentLabel->offset = labels->globalOffset;
+    currentLabel->offset = globalOffset;
     ++labels->totalLabels;
-
-    // printf("labels[%d].name: %s\n", labels->totalLabels - 1, labels->labels[labels->totalLabels - 1].name);
 
     // Check for reallocation
     if (labels->totalLabels >= labels->currAllocatedLabels)
     {
-        // printf("\nReallocation!\n");
         IS_OK_W_EXIT(expandLabelsArray(labels));
     }
 
@@ -121,7 +118,7 @@ bool isLabel(char *data, const char *LABEL_FORMAT)
     int ret = sscanf(data, LABEL_FORMAT, temp.name, &temp.length);
     if (ret != 1 || ret == EOF)
     {
-        PRINT_ERROR_TRACING_MESSAGE(ASM_EXIT_CODES::BAD_LABEL_FORMAT);
+        PRINT_ERROR_TRACING_MESSAGE(LABELS_EXIT_CODES::BAD_LABEL_FORMAT);
         exit(EXIT_FAILURE);
     }
 
