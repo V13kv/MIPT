@@ -39,7 +39,6 @@ EXIT_CODES labelsDtor(labels_t *labels)
     free(labels->labels);
     labels->labels                  = NULL;
     labels->currAllocatedLabels     = 0;
-    labels->globalOffset            = 0;
     labels->totalLabels             = 0;
 
     return EXIT_CODES::NO_ERRORS;
@@ -63,16 +62,18 @@ EXIT_CODES expandLabelsArray(labels_t *labels)
         PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_STD_FUNC_RESULT);
         return EXIT_CODES::BAD_STD_FUNC_RESULT;
     }
+
+    labels->labels = newLabels;
     labels->currAllocatedLabels = ALLOC_INC_COEF * labels->currAllocatedLabels;
 
     return EXIT_CODES::NO_ERRORS;
 }
 
 // TODO: label strip function
-EXIT_CODES initLabel(text_line_t *line, labels_t *labels)
+EXIT_CODES initLabel(char *data, labels_t *labels, const char *LABEL_FORMAT)
 {
     // Error check
-    if (line == NULL || labels == NULL)
+    if (data == NULL || labels == NULL || LABEL_FORMAT == NULL)
     {
         PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::PASSED_OBJECT_IS_NULLPTR);
         return EXIT_CODES::PASSED_OBJECT_IS_NULLPTR;
@@ -80,8 +81,8 @@ EXIT_CODES initLabel(text_line_t *line, labels_t *labels)
 
     // Initialization
     label_t *currentLabel = &labels->labels[labels->totalLabels];
-    int ret = sscanf(line->beginning, LABEL_FORMAT, currentLabel->name, &currentLabel->length);
-    
+    int ret = sscanf(data, LABEL_FORMAT, currentLabel->name, &currentLabel->length);
+
     // Error check + format check
     CHECK_SSCANF_RESULT(ret);
     if (ret != 1)
@@ -91,22 +92,25 @@ EXIT_CODES initLabel(text_line_t *line, labels_t *labels)
     }
 
     // Update `labels` fiels
-    currentLabel->offset = labels->globalOffset;
-    labels->totalLabels++;
+    currentLabel->offset = globalOffset; // currentLabel->offset = labels->globalOffset;
+    ++labels->totalLabels;
+
+    // printf("labels[%d].name: %s\n", labels->totalLabels - 1, labels->labels[labels->totalLabels - 1].name);
 
     // Check for reallocation
     if (labels->totalLabels >= labels->currAllocatedLabels)
     {
+        // printf("\nReallocation!\n");
         IS_OK_W_EXIT(expandLabelsArray(labels));
     }
 
     return EXIT_CODES::NO_ERRORS;
 }
 
-bool isLabel(text_line_t *line)
+bool isLabel(char *data, const char *LABEL_FORMAT)
 {
     // Error check
-    if (line == NULL)
+    if (data == NULL || LABEL_FORMAT == NULL)
     {
         PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::PASSED_OBJECT_IS_NULLPTR);
         exit(EXIT_FAILURE);
@@ -114,10 +118,10 @@ bool isLabel(text_line_t *line)
 
     // Check
     label_t temp = {};
-    int ret = sscanf(line->beginning, LABEL_FORMAT, temp.name, &temp.length);
-    if (ret == 0 || ret == EOF)
+    int ret = sscanf(data, LABEL_FORMAT, temp.name, &temp.length);
+    if (ret != 1 || ret == EOF)
     {
-        PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_STD_FUNC_RESULT);
+        PRINT_ERROR_TRACING_MESSAGE(ASM_EXIT_CODES::BAD_LABEL_FORMAT);
         exit(EXIT_FAILURE);
     }
 

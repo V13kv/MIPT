@@ -1,10 +1,11 @@
-push [dx+32.123]
+jmp ___ThirdLabel123__
 firstLabel:
 add
+jmp secondLabel
+push [dx+32.123]
 secondLabel:
 push 3
 push bx
-jmp ___ThirdLabel123__
 add
 pop
 ___ThirdLabel123__:

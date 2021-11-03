@@ -1,10 +1,15 @@
 #ifndef ASSEMBLER_H
 #define ASSEMBLER_H
 
+#include <stdbool.h>
+
 #define DEBUG_LEVEL 1
 #include "../../lib/debug/debug.h"
 #include "../../lib/text/include/text.h"
+#include "labels.h"
 #include "settings.h"  // FIXME: multiple definition of `MNEMONICS_TABLE'                                                 
+
+extern int globalOffset;
 
 typedef unsigned char byte;
 
@@ -17,6 +22,7 @@ enum class ASM_EXIT_CODES
     UNKNOWN_MNEMONICS,
     UNKNOWN_COMMAND_REGISTER,
     BAD_LABEL_NAME,
+    BAD_LABEL_FORMAT,
 };
 
 struct encoded_command_t
@@ -25,6 +31,7 @@ struct encoded_command_t
     int bytes                                   = 0;
 };
 
+// TODO: add specialCommand field (determines whether instruction is one of jmp, call *etc...)
 struct command_t
 {
     char mnemonics[MAX_MNEMONICS_STR_LENGTH]                            = {};
@@ -35,6 +42,7 @@ struct command_t
     
     size_t argumentsCount                                               = 0;
     int MRI                                                             = 0; // MRI <-> Memory, Register, Immediate (general)
+    bool isSpecialCommand                                               = 0; // special instrs are jmp, call (1), otherwise 0
 
     encoded_command_t encoded                                           = {};
 };
@@ -50,13 +58,13 @@ struct command_t
 
 EXIT_CODES assembly(text_t *code, char *outputFile);
 
-EXIT_CODES parseCommand(text_line_t *line, command_t *command);
+EXIT_CODES parseCommand(text_line_t *line, command_t *command, labels_t *unprocCommandArgLabels);
 EXIT_CODES isSpecialInstruction(command_t *command, bool *isSpecInstr);
 EXIT_CODES hasArguments(char *mnemonics, bool *hasArgs);
 EXIT_CODES checkMnemonics(char *mnemonics);
 EXIT_CODES setCommandMnemonics(command_t *command, char *mnemonics);
 EXIT_CODES setCommandOpcode(command_t *command);
-EXIT_CODES parseCommandArguments(command_t *command, text_line_t *line, int argsStart, int argsEnd);
+EXIT_CODES parseCommandArguments(command_t *command, text_line_t *line, int argsStart, int argsEnd, labels_t *unprocCommandArgLabels);
 EXIT_CODES parseArgument(command_t *command, int *argNumber, text_line_t *line, int *argStart);
 EXIT_CODES checkRegisterForCorrectness(char *reg);
 EXIT_CODES getArgumentsMathOperation(text_line_t *line, int *argStart, char *mathOP);
@@ -66,6 +74,8 @@ EXIT_CODES encodeCommand(command_t *command);
 EXIT_CODES encodeRegisterArgument(command_t *command, char *regStr);
 EXIT_CODES encodeImmediateArgument(command_t *command, char *immStr);
 EXIT_CODES exportEncodedCommand(command_t *command, FILE *fs);
+
+EXIT_CODES fillUnprocCommandArgLabels(labels_t *unproc, labels_t *labels, FILE *fs);
 
 EXIT_CODES resetCommand(command_t *command);
 

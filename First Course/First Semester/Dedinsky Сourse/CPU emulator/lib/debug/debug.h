@@ -71,6 +71,16 @@ enum class EXIT_CODES
                 return EXIT_CODES::BAD_STD_FUNC_RESULT;                         \
             }                                                                   \
         } while (0)  
+    
+    #define CHECK_FSEEK_RESULT(ret)                                             \
+        do                                                                      \
+        {                                                                       \
+            if (ret != 0)                                                       \
+            {                                                                   \
+                PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_STD_FUNC_RESULT);   \
+                return EXIT_CODES::BAD_STD_FUNC_RESULT;                         \
+            }                                                                   \
+        } while (0)
 
 #else
 
@@ -79,6 +89,8 @@ enum class EXIT_CODES
     #define IS_OK_W_EXIT(function)          function
     #define PRINT_ERROR_TRACING_MESSAGE(error_code)
     #define OBJECT_VERIFY(object, type)
+    #define CHECK_SSCANF_RESULT(ret)
+    #define CHECK_FSEEK_RESULT(ret)
 
 #endif
 
