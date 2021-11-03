@@ -8,12 +8,19 @@ char *getFileName(int argc, char **argv);
 
 int main(int argc, char **argv)
 {
+    // Read bytecode
     text_t byteCode = {};
     textCtor(&byteCode, getFileName(argc, argv), FILE_MODE::RB);
 
-    // TODO: processor implementation
-    printf("byteCode.size: %llu\n", byteCode.size);
+    // Processor initialization
+    cpu_t CPU = {};
+    IS_OK_W_EXIT(cpuCtor(&CPU));
 
+    // Execute bytecode
+    IS_OK_W_EXIT(cpuExecuteBytecode(&byteCode, &CPU));
+
+    // Free allocated space
+    IS_OK_W_EXIT(cpuDtor(&CPU));
     textDtor(&byteCode);
 
     return 0;

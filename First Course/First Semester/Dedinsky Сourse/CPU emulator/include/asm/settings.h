@@ -1,7 +1,6 @@
 #ifndef ASM_SETTINGS_H
 #define ASM_SETTINGS_H
 
-
 #define COMMAND_FORMAT                  "%[a-z]%n %n%s%n"
 #define MNEMONICS_FORMAT                "%[a-z] %n"
 #define REGISTER_FORMAT                 "%2[a-z]%n"

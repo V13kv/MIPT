@@ -1,62 +1,37 @@
 #include <stdio.h>
 #include <string.h>  // for strcpy && memcpy
 
-#include "../../include/asm/assembler.h"
 #include "../../lib/text/include/text.h"
 
+#include "../../include/asm/assembler.h"
+#include "../../include/asm/labels.h"
+
+#include "../../include/asm/settings.h"
+#include "../../include/constants.h"
+
 typedef unsigned int offset;
-int globalOffset = 0;
 
-#pragma region TABLES
+static EXIT_CODES parseCommand(text_line_t *line, command_t *command, labels_t *unprocCommandArgLabels, const int globalOffset);
+static EXIT_CODES hasArguments(char *mnemonics, bool *hasArgs);
+static EXIT_CODES isSpecialInstruction(command_t *command, bool *isSpecInstr);
+static EXIT_CODES checkMnemonics(char *mnemonics);
+static EXIT_CODES setCommandMnemonics(command_t *command, char *mnemonics);
+static EXIT_CODES setCommandOpcode(command_t *command);
+static EXIT_CODES parseCommandArguments(command_t *command, text_line_t *line, int argsStart, int argsEnd, labels_t *unprocCommandArgLabels, const int globalOffset);
+static EXIT_CODES parseArgument(command_t *command, int *argNumber, text_line_t *line, int *argStart);
+static EXIT_CODES checkRegisterForCorrectness(char *reg);
+static EXIT_CODES getArgumentsMathOperation(text_line_t *line, int *argStart, char *mathOP);
 
-    #define OPDEF(opName, ...) #opName,
+static EXIT_CODES encodeCommand(command_t *command);
+static EXIT_CODES encodeRegisterArgument(command_t *command, char *regStr);
+static EXIT_CODES encodeImmediateArgument(command_t *command, char *immStr);
+static EXIT_CODES exportEncodedCommand(command_t *command, FILE *fs);
 
-        const char *MNEMONICS_TABLE[] = {
-            #include "../../include/opdefs.h"
-        };
+static EXIT_CODES fillUnprocCommandArgLabels(labels_t *unproc, labels_t *labels, FILE *fs);
 
-        const size_t MNEMONICS_TABLE_LENGTH = sizeof(MNEMONICS_TABLE) / sizeof(MNEMONICS_TABLE[0]);
+static EXIT_CODES resetCommand(command_t *command);
 
-    #undef OPDEF
-
-    #define OPDEF(unused, opcode, ...) opcode,
-
-        const int OPCODES_TABLE[] = {
-            #include "../../include/opdefs.h"
-        };
-
-    #undef OPDEF
-
-    #define OPDEF(unused1, unused2, opArgsCount, ...) opArgsCount,
-
-        const int ARGS_COUNT_TABLE[] = {
-            #include "../../include/opdefs.h"
-        };
-
-    #undef OPDEF
-
-    #define REGDEF(regName, regOpcode, ...) \
-        {                                   \
-            #regName,                       \
-            regOpcode                       \
-        },
-
-        struct register_t
-        {
-            char *name;
-            int opcode;
-        };
-
-        const register_t REGISTERS_TABLE[] = {
-            #include "../../include/registers.h"
-        };
-
-        const size_t REGISTERS_TABLE_LENGTH = sizeof(REGISTERS_TABLE) / sizeof(REGISTERS_TABLE[0]);
-
-    #undef REGDEF
-
-#pragma endregion TABLES
-
+// ******TODO: Долгосрочная перспектива: система ошибок без exit'ов, всё возвращать в main
 EXIT_CODES assembly(text_t *code, char *outputFileName)
 {
     // Error check
@@ -83,17 +58,18 @@ EXIT_CODES assembly(text_t *code, char *outputFileName)
     IS_OK_W_EXIT(labelsCtor(&unprocCommandArgLabels));
 
     // Assembly
+    int globalOffset = 0;
     command_t command = {};
     for (int line = 0; line < code->lines_count; ++line)
     {
         if (isLabel(code->lines[line].beginning, LABEL_LINE_FORMAT))
         {
-            IS_OK_W_EXIT(initLabel(code->lines[line].beginning, &labels, LABEL_LINE_FORMAT));
+            IS_OK_W_EXIT(initLabel(code->lines[line].beginning, &labels, LABEL_LINE_FORMAT, globalOffset));
         }
         else
         {
             // Parse command
-            IS_OK_W_EXIT(parseCommand(&code->lines[line], &command, &unprocCommandArgLabels));
+            IS_OK_W_EXIT(parseCommand(&code->lines[line], &command, &unprocCommandArgLabels, globalOffset));
             IS_OK_W_EXIT(encodeCommand(&command));
             IS_OK_W_EXIT(exportEncodedCommand(&command, fs));
             
@@ -113,7 +89,7 @@ EXIT_CODES assembly(text_t *code, char *outputFileName)
     return EXIT_CODES::NO_ERRORS;
 }
 
-EXIT_CODES parseCommand(text_line_t *line, command_t *command, labels_t *unprocCommandArgLabels)
+static EXIT_CODES parseCommand(text_line_t *line, command_t *command, labels_t *unprocCommandArgLabels, const int globalOffset)
 {
     // Error check
     if (line == NULL || command == NULL || unprocCommandArgLabels == NULL)
@@ -130,7 +106,6 @@ EXIT_CODES parseCommand(text_line_t *line, command_t *command, labels_t *unprocC
     char arguments[MAX_ARGUMENTS_PER_COMMAND * MAX_ARGUMENT_STR_LENGTH] = {};
 
     int ret = sscanf(line->beginning, COMMAND_FORMAT, mnemonics, &mnemonicsEnd, &argsStart, arguments, &argsEnd);
-    
     CHECK_SSCANF_RESULT(ret);
     if (ret == 0)
     {
@@ -158,7 +133,7 @@ EXIT_CODES parseCommand(text_line_t *line, command_t *command, labels_t *unprocC
         }
 
         // Parse arguments
-        IS_OK_W_EXIT(parseCommandArguments(command, line, argsStart, argsEnd, unprocCommandArgLabels));
+        IS_OK_W_EXIT(parseCommandArguments(command, line, argsStart, argsEnd, unprocCommandArgLabels, globalOffset));
     }
 
     // printf("command->mnemonics: %s\n", command->mnemonics);
@@ -170,7 +145,7 @@ EXIT_CODES parseCommand(text_line_t *line, command_t *command, labels_t *unprocC
     return EXIT_CODES::NO_ERRORS;
 }
 
-EXIT_CODES hasArguments(char *mnemonics, bool *hasArgs)
+static EXIT_CODES hasArguments(char *mnemonics, bool *hasArgs)
 {
     // Erorr check
     if (mnemonics == NULL || hasArgs == NULL)
@@ -193,7 +168,7 @@ EXIT_CODES hasArguments(char *mnemonics, bool *hasArgs)
     return EXIT_CODES::BAD_OBJECT_PASSED;
 }
 
-EXIT_CODES isSpecialInstruction(command_t *command, bool *isSpecInstr)
+static EXIT_CODES isSpecialInstruction(command_t *command, bool *isSpecInstr)
 {
     // Error check
     if (command == NULL || isSpecInstr == NULL)
@@ -219,7 +194,7 @@ EXIT_CODES isSpecialInstruction(command_t *command, bool *isSpecInstr)
     return EXIT_CODES::NO_ERRORS;
 }
 
-EXIT_CODES checkMnemonics(char *mnemonics)
+static EXIT_CODES checkMnemonics(char *mnemonics)
 {
     // Error check
     if (mnemonics == NULL)
@@ -241,7 +216,7 @@ EXIT_CODES checkMnemonics(char *mnemonics)
     return EXIT_CODES::BAD_OBJECT_PASSED;
 }
 
-EXIT_CODES setCommandMnemonics(command_t *command, char *mnemonics)
+static EXIT_CODES setCommandMnemonics(command_t *command, char *mnemonics)
 {
     // Error check
     if (command == NULL || mnemonics == NULL)
@@ -256,7 +231,7 @@ EXIT_CODES setCommandMnemonics(command_t *command, char *mnemonics)
     return EXIT_CODES::NO_ERRORS;
 }
 
-EXIT_CODES setCommandOpcode(command_t *command)
+static EXIT_CODES setCommandOpcode(command_t *command)
 {
     // Error check
     if (command == NULL)
@@ -279,7 +254,7 @@ EXIT_CODES setCommandOpcode(command_t *command)
     return EXIT_CODES::BAD_OBJECT_PASSED;
 }
 
-EXIT_CODES parseCommandArguments(command_t *command, text_line_t *line, int argsStart, int argsEnd, labels_t *unprocCommandArgLabels)
+static EXIT_CODES parseCommandArguments(command_t *command, text_line_t *line, int argsStart, int argsEnd, labels_t *unprocCommandArgLabels, const int globalOffset)
 {
     // Error check
     if (command == NULL || line == NULL || argsEnd == NULL || unprocCommandArgLabels == NULL)
@@ -296,8 +271,7 @@ EXIT_CODES parseCommandArguments(command_t *command, text_line_t *line, int args
     {
         if (isLabel(&line->beginning[argsStart], LABEL_ARG_FORMAT))
         {
-            IS_OK_W_EXIT(initLabel(&line->beginning[argsStart], unprocCommandArgLabels, LABEL_ARG_FORMAT));
-            // printf("\tLabel arg found! Name: %s\n", unprocCommandArgLabels->labels[unprocCommandArgLabels->totalLabels - 1].name);
+            IS_OK_W_EXIT(initLabel(&line->beginning[argsStart], unprocCommandArgLabels, LABEL_ARG_FORMAT, globalOffset));
             
             command->isSpecialCommand   = true;
             command->argumentsCount     = 1;
@@ -346,7 +320,7 @@ EXIT_CODES parseCommandArguments(command_t *command, text_line_t *line, int args
     return EXIT_CODES::NO_ERRORS;
 }
 
-EXIT_CODES parseArgument(command_t *command, int *argNumber, text_line_t *line, int *argStart)
+static EXIT_CODES parseArgument(command_t *command, int *argNumber, text_line_t *line, int *argStart)
 {
     // Error check
     if (command == NULL || argNumber == NULL || line == NULL || argStart == NULL)
@@ -387,7 +361,7 @@ EXIT_CODES parseArgument(command_t *command, int *argNumber, text_line_t *line, 
     return EXIT_CODES::NO_ERRORS;
 }
 
-EXIT_CODES checkRegisterForCorrectness(char *reg)
+static EXIT_CODES checkRegisterForCorrectness(char *reg)
 {
     // Error check
     if (reg == NULL)
@@ -410,7 +384,7 @@ EXIT_CODES checkRegisterForCorrectness(char *reg)
 }
 
 // TODO: Support of -, etc (*additional all math ops as functions, like +(ax, 123) etc)
-EXIT_CODES getArgumentsMathOperation(text_line_t *line, int *argStart, char *mathOP)
+static EXIT_CODES getArgumentsMathOperation(text_line_t *line, int *argStart, char *mathOP)
 {
     // Error check
     if (mathOP == NULL || line == NULL || argStart == NULL)
@@ -437,7 +411,8 @@ EXIT_CODES getArgumentsMathOperation(text_line_t *line, int *argStart, char *mat
     return EXIT_CODES::NO_ERRORS;
 }
 
-EXIT_CODES encodeCommand(command_t *command)
+
+static EXIT_CODES encodeCommand(command_t *command)
 {
     // Error check
     if (command == NULL)
@@ -484,7 +459,7 @@ EXIT_CODES encodeCommand(command_t *command)
     return EXIT_CODES::NO_ERRORS;
 }
 
-EXIT_CODES encodeRegisterArgument(command_t *command, char *regStr)
+static EXIT_CODES encodeRegisterArgument(command_t *command, char *regStr)
 {
     // Error check
     if (command == NULL || regStr == NULL)
@@ -507,7 +482,7 @@ EXIT_CODES encodeRegisterArgument(command_t *command, char *regStr)
     return EXIT_CODES::BAD_OBJECT_PASSED;
 }
 
-EXIT_CODES encodeImmediateArgument(command_t *command, char *immStr)
+static EXIT_CODES encodeImmediateArgument(command_t *command, char *immStr)
 {
     // Error check
     if (command == NULL || immStr == NULL)
@@ -522,7 +497,7 @@ EXIT_CODES encodeImmediateArgument(command_t *command, char *immStr)
     return EXIT_CODES::NO_ERRORS;
 }
 
-EXIT_CODES exportEncodedCommand(command_t *command, FILE *fs)
+static EXIT_CODES exportEncodedCommand(command_t *command, FILE *fs)
 {
     // Error check
     if (command == NULL)
@@ -538,7 +513,7 @@ EXIT_CODES exportEncodedCommand(command_t *command, FILE *fs)
 }
 
 
-EXIT_CODES fillUnprocCommandArgLabels(labels_t *unproc, labels_t *labels, FILE *fs)
+static EXIT_CODES fillUnprocCommandArgLabels(labels_t *unproc, labels_t *labels, FILE *fs)
 {
     // Error check
     if (unproc == NULL || labels == NULL || fs == NULL)
@@ -565,7 +540,7 @@ EXIT_CODES fillUnprocCommandArgLabels(labels_t *unproc, labels_t *labels, FILE *
 }
 
 
-EXIT_CODES resetCommand(command_t *command)
+static EXIT_CODES resetCommand(command_t *command)
 {
     // Erorr check
     if (command == NULL)
