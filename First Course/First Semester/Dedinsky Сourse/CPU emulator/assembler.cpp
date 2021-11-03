@@ -3,7 +3,9 @@
 
 #include "include/asm/assembler.h"
 #include "lib/text/include/text.h"
-#include "include/asm/labels.h"
+
+typedef unsigned int offset;
+int globalOffset = 0;
 
 #pragma region TABLES
 
@@ -72,51 +74,49 @@ EXIT_CODES assembly(text_t *code, char *outputFileName)
         return EXIT_CODES::BAD_STD_FUNC_RESULT;
     }
 
-    // Initialization of needed objects
+    // General labels
     labels_t labels = {};
     IS_OK_W_EXIT(labelsCtor(&labels));
 
+    // Command argument labels
+    labels_t unprocCommandArgLabels = {};
+    IS_OK_W_EXIT(labelsCtor(&unprocCommandArgLabels));
+
     // Assembly
-    // TODO: create new pair type (label_name, offset) для специальных команд call и jmp, где label_name -
-    // имя метки (аргумент команды), а offset - смещение команды относительно начала файла (при записи байтами); после 
-    // выделения места в бинарном файле под offset метки относительно начала бинарного файла пройтись циклом по всем таким
-    // парам и с помощью fseek расставить недостающие высчитанные смещения меток
     command_t command = {};
     for (int line = 0; line < code->lines_count; ++line)
     {
-        if (isLabel(&code->lines[line]))
+        if (isLabel(code->lines[line].beginning, LABEL_LINE_FORMAT))
         {
-            IS_OK_W_EXIT(initLabel(&code->lines[line], &labels));
+            IS_OK_W_EXIT(initLabel(code->lines[line].beginning, &labels, LABEL_LINE_FORMAT));
         }
         else
         {
-            // printf("line: %s\n", code->lines[line].beginning);
-            IS_OK_W_EXIT(parseCommand(&code->lines[line], &command));
+            // Parse command
+            IS_OK_W_EXIT(parseCommand(&code->lines[line], &command, &unprocCommandArgLabels));
             IS_OK_W_EXIT(encodeCommand(&command));
             IS_OK_W_EXIT(exportEncodedCommand(&command, fs));
             
-            // Update globa offset for label's offset identification
-            labels.globalOffset += command.encoded.bytes;
+            // Update global offset (for label's offset identification)
+            globalOffset += command.encoded.bytes;
 
             IS_OK_W_EXIT(resetCommand(&command));  
         }
-        // printf("labels.globalOffset: %d\n", labels.globalOffset);
     }
+    
+    IS_OK_W_EXIT(fillUnprocCommandArgLabels(&unprocCommandArgLabels, &labels, fs));
 
-    for (int label = 0; label < labels.totalLabels; ++label)
-    {
-        printf("%d. name: %s; offset: %lld\n", label, labels.labels[label].name, labels.labels[label].offset);
-    }
-
+    IS_OK_W_EXIT(labelsDtor(&unprocCommandArgLabels));
     IS_OK_W_EXIT(labelsDtor(&labels));
+    fclose(fs);
 
     return EXIT_CODES::NO_ERRORS;
 }
 
-EXIT_CODES parseCommand(text_line_t *line, command_t *command)
+EXIT_CODES parseCommand(text_line_t *line, command_t *command, labels_t *unprocCommandArgLabels)
 {
     // Error check
-    if (line == NULL || command == NULL)
+    if (line == NULL || command == NULL || unprocCommandArgLabels == NULL)
     {
         PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::PASSED_OBJECT_IS_NULLPTR);
         return EXIT_CODES::PASSED_OBJECT_IS_NULLPTR;
@@ -130,7 +130,13 @@ EXIT_CODES parseCommand(text_line_t *line, command_t *command)
     char arguments[MAX_ARGUMENTS_PER_COMMAND * MAX_ARGUMENT_STR_LENGTH] = {};
 
     int ret = sscanf(line->beginning, COMMAND_FORMAT, mnemonics, &mnemonicsEnd, &argsStart, arguments, &argsEnd);
+    
     CHECK_SSCANF_RESULT(ret);
+    if (ret == 0)
+    {
+        PRINT_ERROR_TRACING_MESSAGE(ASM_EXIT_CODES::BAD_COMMAND_FORMAT);
+        return EXIT_CODES::BAD_OBJECT_PASSED;
+    }
 
     // Parse mnemonics
     IS_OK_W_EXIT(checkMnemonics(mnemonics)); 
@@ -138,7 +144,7 @@ EXIT_CODES parseCommand(text_line_t *line, command_t *command)
     IS_OK_W_EXIT(setCommandOpcode(command));
 
     // Check mnemonics for arguments existence
-    // TODO: normal arguments check, normal command opdefs format etc.
+    // TODO: normal arguments check, normal command opdefs format etc. (do it via adding ',' support for 2+ arguments)
     bool hasArgs = true;
     IS_OK_W_EXIT(hasArguments(command->mnemonics, &hasArgs));
 
@@ -151,15 +157,8 @@ EXIT_CODES parseCommand(text_line_t *line, command_t *command)
             return EXIT_CODES::BAD_OBJECT_PASSED;
         }
 
-        // Parse only normal instructions (not jmp, call (because they use labels as arguments))
-        bool isSpecInstr = true;
-        IS_OK_W_EXIT(isSpecialInstruction(command, &isSpecInstr));
-
-        if (!isSpecInstr)
-        {
-            // Parse arguments
-            IS_OK_W_EXIT(parseCommandArguments(command, line, argsStart, argsEnd));
-        }
+        // Parse arguments
+        IS_OK_W_EXIT(parseCommandArguments(command, line, argsStart, argsEnd, unprocCommandArgLabels));
     }
 
     // printf("command->mnemonics: %s\n", command->mnemonics);
@@ -280,47 +279,70 @@ EXIT_CODES setCommandOpcode(command_t *command)
     return EXIT_CODES::BAD_OBJECT_PASSED;
 }
 
-EXIT_CODES parseCommandArguments(command_t *command, text_line_t *line, int argsStart, int argsEnd)
+EXIT_CODES parseCommandArguments(command_t *command, text_line_t *line, int argsStart, int argsEnd, labels_t *unprocCommandArgLabels)
 {
     // Error check
-    if (command == NULL || line == NULL || argsEnd == NULL)
+    if (command == NULL || line == NULL || argsEnd == NULL || unprocCommandArgLabels == NULL)
     {
         PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::PASSED_OBJECT_IS_NULLPTR);
         return EXIT_CODES::PASSED_OBJECT_IS_NULLPTR;
     }
 
-    // Check for correct memory brackets
-    if  ((line->beginning[argsStart] == '[' && line->beginning[argsEnd - 1] != ']') ||
-         (line->beginning[argsStart] != '[' && line->beginning[argsEnd - 1] == ']'))
-    {
-        PRINT_ERROR_TRACING_MESSAGE(ASM_EXIT_CODES::BAD_COMMAND_MEMORY_BRACKETS_USE);
-        return EXIT_CODES::BAD_OBJECT_PASSED;
-    }
+    // Check for special instructions (jmp, call)
+    bool isSpecInstr = true;
+    IS_OK_W_EXIT(isSpecialInstruction(command, &isSpecInstr));
 
-    // Set command MRI
-    if (line->beginning[argsStart] == '[')
+    if (isSpecInstr)
     {
-        ++argsStart;
-        --argsEnd;
-
-        SET_MRI_MEMORY(command->MRI);
-    }
-
-    // Parse command arguments
-    int argNumber = 0;
-    char op = ' ';
-    int argStart = argsStart;
-    while (argStart < argsEnd)
-    {
-        IS_OK_W_EXIT(parseArgument(command, &argNumber, line, &argStart));
-        if (argStart < argsEnd)
+        if (isLabel(&line->beginning[argsStart], LABEL_ARG_FORMAT))
         {
-            // TODO: Support of -, etc (*additional all math ops as functions, like +(ax, 123) etc)
-            IS_OK_W_EXIT(getArgumentsMathOperation(line, &argStart, &op));
+            IS_OK_W_EXIT(initLabel(&line->beginning[argsStart], unprocCommandArgLabels, LABEL_ARG_FORMAT));
+            // printf("\tLabel arg found! Name: %s\n", unprocCommandArgLabels->labels[unprocCommandArgLabels->totalLabels - 1].name);
+            
+            command->isSpecialCommand   = true;
+            command->argumentsCount     = 1;
+        }
+        else
+        {
+            PRINT_ERROR_TRACING_MESSAGE(ASM_EXIT_CODES::BAD_LABEL_FORMAT);
+            return EXIT_CODES::BAD_OBJECT_PASSED;
         }
     }
-    command->argumentsCount = argNumber;
+    else
+    {
+        // Check for correct memory brackets
+        if  ((line->beginning[argsStart] == '[' && line->beginning[argsEnd - 1] != ']') ||
+            (line->beginning[argsStart] != '[' && line->beginning[argsEnd - 1] == ']'))
+        {
+            PRINT_ERROR_TRACING_MESSAGE(ASM_EXIT_CODES::BAD_COMMAND_MEMORY_BRACKETS_USE);
+            return EXIT_CODES::BAD_OBJECT_PASSED;
+        }
 
+        // Set command MRI
+        if (line->beginning[argsStart] == '[')
+        {
+            ++argsStart;
+            --argsEnd;
+
+            SET_MRI_MEMORY(command->MRI);
+        }
+
+        // Parse command arguments
+        int argNumber = 0;
+        char op = ' ';
+        int argStart = argsStart;
+        while (argStart < argsEnd)
+        {
+            IS_OK_W_EXIT(parseArgument(command, &argNumber, line, &argStart));
+            if (argStart < argsEnd)
+            {
+                // TODO: Support of -, etc (*additional all math ops as functions, like +(ax, 123) etc)
+                IS_OK_W_EXIT(getArgumentsMathOperation(line, &argStart, &op));
+            }
+        }
+        command->argumentsCount = argNumber;
+    }
+    
     return EXIT_CODES::NO_ERRORS;
 }
 
@@ -427,7 +449,13 @@ EXIT_CODES encodeCommand(command_t *command)
     // Encode metadata
     command->encoded.byteData[command->encoded.bytes++] = (byte) command->opcode;
 
-    if (command->argumentsCount != NO_ARGUMENTS)
+    // Special instructions encoding
+    if (command->isSpecialCommand)
+    {
+        command->encoded.bytes += sizeof(offset);
+    }
+    // Common (not zero arg) instructions encoding
+    else if (command->argumentsCount != NO_ARGUMENTS)
     {
         // Encode metadata
         command->encoded.byteData[command->encoded.bytes] = (byte) ENCODE_COMMAND_ARGS_COUNT(command->argumentsCount);
@@ -451,10 +479,6 @@ EXIT_CODES encodeCommand(command_t *command)
                 command->encoded.bytes += sizeof(double);
             }
         }
-    }
-    else  // special instruction
-    {
-        
     }
 
     return EXIT_CODES::NO_ERRORS;
@@ -513,6 +537,34 @@ EXIT_CODES exportEncodedCommand(command_t *command, FILE *fs)
     return EXIT_CODES::NO_ERRORS;
 }
 
+
+EXIT_CODES fillUnprocCommandArgLabels(labels_t *unproc, labels_t *labels, FILE *fs)
+{
+    // Error check
+    if (unproc == NULL || labels == NULL || fs == NULL)
+    {
+        PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::PASSED_OBJECT_IS_NULLPTR);
+        return EXIT_CODES::PASSED_OBJECT_IS_NULLPTR;
+    }
+
+    // Fill unprocessed argument labels of commands
+    for (int argLabel = 0; argLabel < unproc->totalLabels; ++argLabel)
+    {
+        for (int label = 0; label < labels->totalLabels; ++label)
+        {
+            if (!strcmp(unproc->labels[argLabel].name, labels->labels[label].name))
+            {
+                CHECK_FSEEK_RESULT(fseek(fs, unproc->labels[argLabel].offset + 1, SEEK_SET));
+
+                fwrite(&labels->labels[label].offset, sizeof(offset), 1, fs);
+            }
+        }
+    }
+
+    return EXIT_CODES::NO_ERRORS;
+}
+
+
 EXIT_CODES resetCommand(command_t *command)
 {
     // Erorr check
@@ -528,10 +580,11 @@ EXIT_CODES resetCommand(command_t *command)
     memset(command->argsMRI, 0, sizeof(command->argsMRI));
     memset(command->encoded.byteData, 0, sizeof(command->encoded.byteData));
 
-    command->argumentsCount = 0;
-    command->encoded.bytes  = 0;
-    command->opcode         = 0;
-    command->MRI            = 0;
+    command->opcode             = 0;
+    command->argumentsCount     = 0;
+    command->MRI                = 0;
+    command->isSpecialCommand   = 0;
+    command->encoded.bytes      = 0;
 
     return EXIT_CODES::NO_ERRORS;
 }
