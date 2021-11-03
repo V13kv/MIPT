@@ -69,7 +69,6 @@ EXIT_CODES parseArgument(command_t *command, int *argNumber, text_line_t *line, 
 EXIT_CODES checkRegisterForCorrectness(char *reg);
 EXIT_CODES getArgumentsMathOperation(text_line_t *line, int *argStart, char *mathOP);
 
-
 EXIT_CODES encodeCommand(command_t *command);
 EXIT_CODES encodeRegisterArgument(command_t *command, char *regStr);
 EXIT_CODES encodeImmediateArgument(command_t *command, char *immStr);

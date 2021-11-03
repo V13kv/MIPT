@@ -18,26 +18,44 @@ BinDir = bin
 
 TextBinDir = $(LibDir)/text/bin
 TextSrcDir = $(LibDir)/text/src
-TextIncDir 	= $(LibDir)/text/include
+TextIncDir = $(LibDir)/text/include
 
-ASM_OBJECTS =	$(BinDir)/main.o $(BinDir)/labels.o $(BinDir)/assembler.o \
+AsmSrcDir = src/asm
+AsmBinDir = bin/asm
+
+ASM_OBJECTS =	$(AsmBinDir)/main.o $(AsmBinDir)/labels.o $(AsmBinDir)/assembler.o \
 				$(TextBinDir)/text.o $(TextBinDir)/file.o
 
 asm.exe: $(ASM_OBJECTS)
 	g++ $(ASM_OBJECTS) -o asm.exe
 
-$(BinDir)/main.o: main.cpp $(TextIncDir)/text.h $(LibDir)/colors/colors.h $(IncDir)/asm/assembler.h
-	g++ -c main.cpp $(CXXFLAGS) -o $(BinDir)/main.o
+$(AsmBinDir)/main.o: $(AsmSrcDir)/main.cpp $(TextIncDir)/text.h $(LibDir)/colors/colors.h $(IncDir)/asm/assembler.h
+	g++ -c $(AsmSrcDir)/main.cpp $(CXXFLAGS) -o $(AsmBinDir)/main.o
 
-$(BinDir)/labels.o: labels.cpp $(IncDir)/asm/labels.h $(IncDir)/asm/assembler.h
-	g++ -c labels.cpp $(CXXFLAGS) -o $(BinDir)/labels.o
+$(AsmBinDir)/labels.o: $(AsmSrcDir)/labels.cpp $(IncDir)/asm/labels.h $(IncDir)/asm/assembler.h
+	g++ -c $(AsmSrcDir)/labels.cpp $(CXXFLAGS) -o $(AsmBinDir)/labels.o
 
-$(BinDir)/assembler.o: 	assembler.cpp $(IncDir)/asm/assembler.h $(TextIncDir)/text.h $(IncDir)/asm/labels.h \
+$(AsmBinDir)/assembler.o: 	$(AsmSrcDir)/assembler.cpp $(IncDir)/asm/assembler.h $(TextIncDir)/text.h $(IncDir)/asm/labels.h \
 						$(IncDir)/asm/settings.h $(LibDir)/debug/debug.h $(IncDir)/opdefs.h $(IncDir)/registers.h
-	g++ -c assembler.cpp $(CXXFLAGS) -o $(BinDir)/assembler.o
+	g++ -c $(AsmSrcDir)/assembler.cpp $(CXXFLAGS) -o $(AsmBinDir)/assembler.o
 
 $(TextBinDir)/text.o: $(TextSrcDir)/text.cpp $(TextIncDir)/text.h $(TextIncDir)/file.h
 	g++ -c $(TextSrcDir)/text.cpp $(CXXFLAGS) -o $(TextBinDir)/text.o
 
 $(TextBinDir)/file.o: $(TextSrcDir)/file.cpp $(TextIncDir)/file.h
 	g++ -c $(TextSrcDir)/file.cpp $(CXXFLAGS) -o $(TextBinDir)/file.o
+
+
+ProcBinDir = bin/processor
+ProcSrcDir = src/processor
+
+PROC_OBJS = $(ProcBinDir)/main.o $(ProcBinDir)/processor.o $(TextBinDir)/text.o $(TextBinDir)/file.o
+
+proc.exe: $(PROC_OBJS)
+	g++ $(PROC_OBJS) -o proc.exe
+
+$(ProcBinDir)/main.o: $(ProcSrcDir)/main.cpp $(IncDir)/processor/processor.h $(TextIncDir)/text.h $(LibDir)/colors/colors.h
+	g++ -c $(ProcSrcDir)/main.cpp $(CXXFLAGS) -o $(ProcBinDir)/main.o
+
+$(ProcBinDir)/processor.o: $(ProcSrcDir)/processor.cpp $(IncDir)/processor/processor.h
+	g++ -c $(ProcSrcDir)/processor.cpp $(CXXFLAGS) -o $(ProcBinDir)/processor.o
