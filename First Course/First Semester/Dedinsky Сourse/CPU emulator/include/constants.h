@@ -42,7 +42,7 @@
     };
 
     const register_t REGISTERS_TABLE[] = {
-        #include "registers.h"
+        #include "regdefs.h"
     };
 
     const size_t REGISTERS_TABLE_LENGTH = sizeof(REGISTERS_TABLE) / sizeof(REGISTERS_TABLE[0]);

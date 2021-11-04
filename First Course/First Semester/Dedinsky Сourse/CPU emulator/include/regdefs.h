@@ -6,4 +6,4 @@ REGDEF(cx, 2)
 
 REGDEF(bx, 1)
 
-REGDEF(ip, 250)
+REGDEF(ip, 4)

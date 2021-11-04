@@ -15,6 +15,8 @@ enum class EXIT_CODES
     BAD_OBJECT_PASSED,
     PASSED_OBJECT_IS_NULLPTR,
     BAD_STD_FUNC_RESULT,
+    CONSTRUCTOR_ERROR,
+    DESTRUCTOR_ERROR,
 };
 
 #if defined(DEBUG_LEVEL) && DEBUG_LEVEL >= 1
@@ -83,6 +85,16 @@ enum class EXIT_CODES
                 return EXIT_CODES::BAD_STD_FUNC_RESULT;                         \
             }                                                                   \
         } while (0)
+    
+    #define CHECK_CALLOC_RESULT(ret)                                            \
+        do                                                                      \
+        {                                                                       \
+            if (ret == NULL)                                                    \
+            {                                                                   \
+                PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::BAD_STD_FUNC_RESULT);   \
+                return EXIT_CODES::BAD_STD_FUNC_RESULT;                         \
+            }                                                                   \
+        } while (0)
 
 #else
 
@@ -94,6 +106,7 @@ enum class EXIT_CODES
     #define OBJECT_VERIFY(object, type)
     #define CHECK_SSCANF_RESULT(ret)
     #define CHECK_FSEEK_RESULT(ret)
+    #define CHECK_CALLOC_RESULT(ret)
 
 #endif
 

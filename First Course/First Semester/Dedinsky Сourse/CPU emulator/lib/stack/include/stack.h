@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <stdbool.h>
 
-#define STACK_DEBUG_LEVEL 2
+#define DEBUG_LEVEL 2
 #include "../../debug/debug.h"
 #include "settings.h"
 
@@ -16,8 +16,8 @@
     #define STACK_HASH 0
 #endif
 
-#ifndef STACK_DEBUG_LEVEL
-    #define STACK_DEBUG_LEVEL 0
+#ifndef DEBUG_LEVEL
+    #define DEBUG_LEVEL 0
 #endif
 
 enum class STACK_EXIT_CODES
@@ -29,7 +29,7 @@ enum class STACK_EXIT_CODES
     STACK_DATA_CANARY_IS_DAMAGED,
     STACK_STRUCTURE_CANARY_IS_DAMAGED,
     STACK_HASH_SUM_IS_DAMAGED,
-    BAD_STACK_PASSED,
+    BAD_STACK_PASSED
 };
 
 enum class REALLOC_MODES
@@ -57,7 +57,7 @@ struct stack_t
     #endif
 };
 
-#if STACK_DEBUG_LEVEL == 2
+#if DEBUG_LEVEL == 2
     EXIT_CODES stackDump(stack_t *stack);
 #else
     #define stackDump(stack) EXIT_CODES::NO_ERRORS;
@@ -90,7 +90,7 @@ EXIT_CODES stackReallocation(stack_t *stack, REALLOC_MODES mode);
 
 EXIT_CODES stackPush(stack_t *stack, stackElem_t value);
 
-#define DEFAULT_POPTO_VALUE (int *) 1
+#define DEFAULT_POPTO_VALUE (stackElem_t *) 1
 EXIT_CODES stackPop(stack_t *stack, stackElem_t *popTo = DEFAULT_POPTO_VALUE);
 
 #endif  // STACK_H

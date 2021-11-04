@@ -12,6 +12,8 @@ CXXFLAGS = -g -std=c++17 -Wall -Wextra -Weffc++ -Wc++0x-compat -Wc++11-compat -W
 -Wshadow=global -Wsuggest-attribute=malloc -fcheck-new -fsized-deallocation -fstack-check -fstrict-overflow \
 -flto-odr-type-merging -fno-omit-frame-pointer -Wno-unknown-pragmas
 
+ProjectPath = C:/Users/gold4/Desktop/MIPT-main/First Course/First Semester/Dedinsky Course/CPU emulator
+
 IncDir = include
 LibDir = lib
 BinDir = bin
@@ -36,7 +38,7 @@ $(AsmBinDir)/labels.o: $(AsmSrcDir)/labels.cpp $(IncDir)/asm/labels.h
 	g++ -c $(AsmSrcDir)/labels.cpp $(CXXFLAGS) -o $(AsmBinDir)/labels.o
 
 $(AsmBinDir)/assembler.o:	$(AsmSrcDir)/assembler.cpp $(IncDir)/asm/assembler.h $(TextIncDir)/text.h $(IncDir)/asm/labels.h \
-							$(IncDir)/constants.h $(IncDir)/asm/settings.h $(LibDir)/debug/debug.h $(IncDir)/opdefs.h $(IncDir)/registers.h
+							$(IncDir)/constants.h $(IncDir)/asm/settings.h $(LibDir)/debug/debug.h $(IncDir)/opdefs.h $(IncDir)/regdefs.h
 	g++ -c $(AsmSrcDir)/assembler.cpp $(CXXFLAGS) -o $(AsmBinDir)/assembler.o
 
 $(TextBinDir)/text.o: $(TextSrcDir)/text.cpp $(TextIncDir)/text.h $(TextIncDir)/file.h
@@ -49,13 +51,23 @@ $(TextBinDir)/file.o: $(TextSrcDir)/file.cpp $(TextIncDir)/file.h
 ProcBinDir = bin/processor
 ProcSrcDir = src/processor
 
-PROC_OBJS = $(ProcBinDir)/main.o $(ProcBinDir)/processor.o $(TextBinDir)/text.o $(TextBinDir)/file.o
+StackBinDir	= $(LibDir)/stack/bin
+HashBinDir	= $(LibDir)/hash/bin
+
+PROC_OBJS = $(ProcBinDir)/main.o $(ProcBinDir)/processor.o \
+			$(TextBinDir)/text.o $(TextBinDir)/file.o \
+			$(StackBinDir)/stack.o $(HashBinDir)/hash.o
 
 proc.exe: $(PROC_OBJS)
 	g++ $(PROC_OBJS) -o proc.exe
 
-$(ProcBinDir)/main.o: $(ProcSrcDir)/main.cpp $(IncDir)/processor/processor.h $(TextIncDir)/text.h $(LibDir)/colors/colors.h
+$(ProcBinDir)/main.o: 	$(ProcSrcDir)/main.cpp $(TextIncDir)/text.h $(LibDir)/colors/colors.h $(IncDir)/processor/processor.h
 	g++ -c $(ProcSrcDir)/main.cpp $(CXXFLAGS) -o $(ProcBinDir)/main.o
 
-$(ProcBinDir)/processor.o: $(ProcSrcDir)/processor.cpp $(IncDir)/processor/processor.h
+$(ProcBinDir)/processor.o: 	$(ProcSrcDir)/processor.cpp $(IncDir)/processor/processor.h $(LibDir)/stack/include/stack.h \
+							$(TextIncDir)/text.h
 	g++ -c $(ProcSrcDir)/processor.cpp $(CXXFLAGS) -o $(ProcBinDir)/processor.o
+
+$(StackBinDir)/stack.o $(HashBinDir)/hash.o:
+	"$(MAKE)" -C  "$(ProjectPath)/$(LibDir)/stack/" makefile
+

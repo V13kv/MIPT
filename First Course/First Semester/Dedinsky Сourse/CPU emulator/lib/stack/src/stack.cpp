@@ -3,7 +3,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <float.h>  // for DBL_EPSILON
+#include <math.h>  // for fabs
+#define NOT_EQUAL(elem1, elem2) if ( !(fabs(elem1 - elem2) < DBL_EPSILON) )
+
 #include "../include/stack.h"
+#include "../../colors/colors.h"
 
 #if defined(STACK_HASH) && STACK_HASH == 1
     #include "../../hash/include/hash.h"
@@ -383,7 +388,8 @@ EXIT_CODES stackPop(stack_t *stack, stackElem_t *popTo)
         return EXIT_CODES::BAD_OBJECT_PASSED;
     }
 
-    if (stackReallocCoefficient * stack->size < stack->capacity)
+    // TODO: do constant for 8
+    if (stack->size > 8 && stackReallocCoefficient * stack->size < stack->capacity)
     {
         IS_OK_W_EXIT(stackReallocation(stack, REALLOC_MODES::DECREASE));
     }
@@ -410,7 +416,7 @@ EXIT_CODES stackPop(stack_t *stack, stackElem_t *popTo)
     return EXIT_CODES::NO_ERRORS;
 }
 
-#if defined(STACK_DEBUG_LEVEL) && STACK_DEBUG_LEVEL == 2
+#if defined(DEBUG_LEVEL) && DEBUG_LEVEL == 2
     
     EXIT_CODES stackDump(stack_t *stack)
     {
@@ -440,18 +446,18 @@ EXIT_CODES stackPop(stack_t *stack, stackElem_t *popTo)
             fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\t{\n");
 
             #if defined(STACK_CANARY) && STACK_CANARY == 1   
-                fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\t\t [-1] = %d (CANARY)\n", *((int * ) (((char *) stack->data) - sizeof(stack->canaryLeft))));//*(stack->data - 1));
+                fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\t\t [-1] = %d (CANARY)\n", *((int * ) (((char *) stack->data) - sizeof(stack->canaryLeft))));
             #endif
 
             for (int element = 0; element < 8; ++element)
             {
-                if (stack->data[element] != POISON)
+                NOT_EQUAL(stack->data[element], POISON)
                 {
-                    fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\t\t *[%d] = %d\n", element, stack->data[element]);
+                    fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\t\t *[%d] = %lf\n", element, stack->data[element]);
                 }
                 else
                 {
-                    fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\t\t [%d] = %d (NOT USED)\n", element, stack->data[element]);
+                    fprintf(DEFAULT_ERROR_TRACING_STREAM, "\t\t\t [%d] = %lf (NOT USED)\n", element, stack->data[element]);
                 }
             }
 

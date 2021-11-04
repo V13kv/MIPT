@@ -1,20 +1,29 @@
-jmp ___ThirdLabel123__
-firstLabel:
+push 3
+in
+div
+out
+jmp FOURTH_LABEL
+call ___ThirdLabel123__
+push [dx+32.001]
 add
+firstLabel:
 jmp secondLabel
-push [dx+32.123]
 secondLabel:
 push 3
 push bx
 add
 pop
-___ThirdLabel123__:
 mul
 sub
 div
 out
+___ThirdLabel123__:
+push 97
+out
+pop
+ret
+FOURTH_LABEL:
 halt
 in
-push 3
 push 16
 push 4

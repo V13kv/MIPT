@@ -19,8 +19,6 @@ LibDir = ../
 
 DebugDir = $(LibDir)/debug
 
-all: $(BinDir)/hash.o
-
 $(BinDir)/hash.o: $(SrcDir)/hash.cpp $(IncDir)/hash.h $(DebugDir)/debug.h
 	g++ -c $(SrcDir)/hash.cpp $(CXXFLAGS) -o $(BinDir)/hash.o
 
