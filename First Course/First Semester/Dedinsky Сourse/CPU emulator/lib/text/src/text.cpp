@@ -80,6 +80,8 @@ void textCtor(text_t *text, const char *file_path, const FILE_MODE mode)
 
 void textDtor(text_t *text)
 {
+    assert(text != NULL && "[!] You passed NULL ptr!");
+
     free(text->data);
     free(text->lines);
 }

@@ -9,6 +9,8 @@
 #include "../../include/asm/settings.h"
 #include "../../include/constants.h"
 
+// TODO: 2 args support, strip lines && command args
+
 typedef unsigned int offset;
 
 static EXIT_CODES parseCommand(text_line_t *line, command_t *command, labels_t *unprocCommandArgLabels, const int globalOffset);
@@ -58,7 +60,7 @@ EXIT_CODES assembly(text_t *code, char *outputFileName)
     IS_OK_W_EXIT(labelsCtor(&unprocCommandArgLabels));
 
     // Assembly
-    int globalOffset = 0;
+    int globalOffset = 0;  // (local)
     command_t command = {};
     for (int line = 0; line < code->lines_count; ++line)
     {
@@ -114,6 +116,7 @@ static EXIT_CODES parseCommand(text_line_t *line, command_t *command, labels_t *
     }
 
     // Parse mnemonics
+    // TODO: посчитать один раз индекс нахождения в массивеы
     IS_OK_W_EXIT(checkMnemonics(mnemonics)); 
     IS_OK_W_EXIT(setCommandMnemonics(command, mnemonics));
     IS_OK_W_EXIT(setCommandOpcode(command));
@@ -257,7 +260,7 @@ static EXIT_CODES setCommandOpcode(command_t *command)
 static EXIT_CODES parseCommandArguments(command_t *command, text_line_t *line, int argsStart, int argsEnd, labels_t *unprocCommandArgLabels, const int globalOffset)
 {
     // Error check
-    if (command == NULL || line == NULL || argsEnd == NULL || unprocCommandArgLabels == NULL)
+    if (command == NULL || line == NULL || unprocCommandArgLabels == NULL)
     {
         PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::PASSED_OBJECT_IS_NULLPTR);
         return EXIT_CODES::PASSED_OBJECT_IS_NULLPTR;
@@ -274,7 +277,7 @@ static EXIT_CODES parseCommandArguments(command_t *command, text_line_t *line, i
             IS_OK_W_EXIT(initLabel(&line->beginning[argsStart], unprocCommandArgLabels, LABEL_ARG_FORMAT, globalOffset));
             
             command->isSpecialCommand   = true;
-            command->argumentsCount     = 1;
+            command->argumentsCount     = ONE_ARGUMENT;
         }
         else
         {
@@ -286,7 +289,7 @@ static EXIT_CODES parseCommandArguments(command_t *command, text_line_t *line, i
     {
         // Check for correct memory brackets
         if  ((line->beginning[argsStart] == '[' && line->beginning[argsEnd - 1] != ']') ||
-            (line->beginning[argsStart] != '[' && line->beginning[argsEnd - 1] == ']'))
+             (line->beginning[argsStart] != '[' && line->beginning[argsEnd - 1] == ']'))
         {
             PRINT_ERROR_TRACING_MESSAGE(ASM_EXIT_CODES::BAD_COMMAND_MEMORY_BRACKETS_USE);
             return EXIT_CODES::BAD_OBJECT_PASSED;
@@ -303,7 +306,7 @@ static EXIT_CODES parseCommandArguments(command_t *command, text_line_t *line, i
 
         // Parse command arguments
         int argNumber = 0;
-        char op = ' ';
+        char op = '\0';
         int argStart = argsStart;
         while (argStart < argsEnd)
         {
@@ -403,6 +406,7 @@ static EXIT_CODES getArgumentsMathOperation(text_line_t *line, int *argStart, ch
             *mathOP = '-';
             break;
         default:
+            *mathOP = '\0';
             PRINT_ERROR_TRACING_MESSAGE(ASM_EXIT_CODES::BAD_MATH_OPERATION_IN_COMMAND_ARG);
             return EXIT_CODES::BAD_OBJECT_PASSED;
     }

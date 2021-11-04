@@ -11,6 +11,8 @@
 #include "settings.h"                                               
 #include "labels.h"
 
+typedef unsigned char byte;
+
 enum class ASM_EXIT_CODES
 {
     BAD_COMMAND_FORMAT,
@@ -25,7 +27,8 @@ enum class ASM_EXIT_CODES
 
 struct encoded_command_t
 {
-    char byteData[MAX_ENCODED_COMMAND_LENGTH]   = {};
+    // TODO: char to byte
+    byte byteData[MAX_ENCODED_COMMAND_LENGTH]   = {};
     int bytes                                   = 0;
 };
 
@@ -40,12 +43,11 @@ struct command_t
     
     size_t argumentsCount                                               = 0;
     int MRI                                                             = 0; // MRI <-> Memory, Register, Immediate (general)
-    bool isSpecialCommand                                               = 0; // special instrs are jmp, call (1), otherwise 0
+    bool isSpecialCommand                                               = false; // special instrs are jmp, call (1), otherwise 0
 
     encoded_command_t encoded                                           = {};
 };
 
-typedef unsigned char byte;
 
 #define ENCODE_COMMAND_ARGS_COUNT(commandArgsCount) commandArgsCount << 5
 #define ENCODE_COMMAND_MRI(commandMRI)              commandMRI << 2

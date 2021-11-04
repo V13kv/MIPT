@@ -12,24 +12,25 @@ CXXFLAGS = -g -std=c++17 -Wall -Wextra -Weffc++ -Wc++0x-compat -Wc++11-compat -W
 -Wshadow=global -Wsuggest-attribute=malloc -fcheck-new -fsized-deallocation -fstack-check -fstrict-overflow \
 -flto-odr-type-merging -fno-omit-frame-pointer -Wno-unknown-pragmas
 
+ProjectPath = C:\Users\gold4\Desktop\MIPT-main\First Course\First Semester\Dedinsky Course\CPU emulator\lib\stack
+
 SrcDir = src
 IncDir = include
 BinDir = bin
 LibDir = ../
 
+ColorsDir = $(LibDir)/colors
 DebugDir = $(LibDir)/debug
 
 HashBinDir = $(LibDir)/hash/bin
-HashSrcDir = $(LibDir)/hash/src
 HashIncDir = $(LibDir)/hash/include
 
-all: $(BinDir)/stack.o $(HashBinDir)/hash.o
-
-$(BinDir)/stack.o: $(SrcDir)/stack.cpp $(IncDir)/stack.h $(IncDir)/settings.h $(DebugDir)/debug.h $(HashIncDir)/hash.h
+$(BinDir)/stack.o: 	$(SrcDir)/stack.cpp $(IncDir)/stack.h $(IncDir)/settings.h \
+					$(DebugDir)/debug.h $(HashIncDir)/hash.h $(LibDir)/colors/colors.h
 	g++ -c $(SrcDir)/stack.cpp $(CXXFLAGS) -o $(BinDir)/stack.o
 
-$(HashBinDir)/hash.o: $(HashSrcDir)/hash.cpp $(DebugDir)/debug.h $(HashIncDir)/hash.h
-	g++ -c $(HashSrcDir)/hash.cpp $(CXXFLAGS) -o $(HashBinDir)/hash.o
+$(HashBinDir)/hash.o: 
+	"$(MAKE)" -C "$(ProjectPath)/$(LibDir)/hash/"
 
 .PHONY: init
 init:

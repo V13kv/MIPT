@@ -4,7 +4,7 @@
 
 #pragma region STACK_INTERNALS
 
-    #define stackElem_t                 int     // Stack is consists of stackElem_t type variables only
+    #define stackElem_t                 double     // Stack is consists of stackElem_t type variables only
     #define stackReallocCoefficient     2       // Determines how many times the stack increases/decreases
     #define POISON                      -663    // Poison for identifying unused values
 
