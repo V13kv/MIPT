@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "../include/file.h"
 #include "../include/text.h"
@@ -92,7 +93,7 @@ void deleteEmptyLines(char *text)
 
     char *read = text;
     char *write = text;
-    char previous_char = ' ';
+    char previous_char = '\n';
 
     while (*read != '\0')
     {
@@ -106,6 +107,31 @@ void deleteEmptyLines(char *text)
         ++read;
     }
     *write = '\0';
+}
+
+char *stripLine(char *line)
+{
+    assert(line != NULL && "[!] You have passed a null pointer as a `s` parameter!");
+
+    size_t size = strlen(line);
+    if (!size)
+    {
+        return line;
+    }
+
+    char *end = line + size - 1;
+    while (end >= line && isspace(*end))
+    {
+        end--;
+    }
+    *(end + 1) = '\0';
+
+    while (*line && isspace(*line))
+    {
+        line++;
+    }
+
+    return line;
 }
 
 void convertLinesToCStrings(char *text)

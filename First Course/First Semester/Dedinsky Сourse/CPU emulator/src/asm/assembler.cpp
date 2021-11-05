@@ -9,7 +9,7 @@
 #include "../../include/asm/settings.h"
 #include "../../include/constants.h"
 
-// TODO: 2 args support, strip lines && command args
+// TODO: 2 args support, strip command args
 
 typedef unsigned int offset;
 
@@ -64,6 +64,7 @@ EXIT_CODES assembly(text_t *code, char *outputFileName)
     command_t command = {};
     for (int line = 0; line < code->lines_count; ++line)
     {
+        code->lines[line].beginning = stripLine(code->lines[line].beginning);
         if (isLabel(code->lines[line].beginning, LABEL_LINE_FORMAT))
         {
             IS_OK_W_EXIT(initLabel(code->lines[line].beginning, &labels, LABEL_LINE_FORMAT, globalOffset));
@@ -116,7 +117,7 @@ static EXIT_CODES parseCommand(text_line_t *line, command_t *command, labels_t *
     }
 
     // Parse mnemonics
-    // TODO: посчитать один раз индекс нахождения в массивеы
+    // TODO: посчитать один раз индекс нахождения в массиве
     IS_OK_W_EXIT(checkMnemonics(mnemonics)); 
     IS_OK_W_EXIT(setCommandMnemonics(command, mnemonics));
     IS_OK_W_EXIT(setCommandOpcode(command));

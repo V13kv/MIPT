@@ -76,6 +76,12 @@ OPDEF(ret, 10, 0, {
     RET();
 }) // +
 
+// TODO: support of cmp ax, dx; cmp [dx+32], ax; cmp [dx+32], [ax+41]; cmp ax, 123
+// OPDEF(cmp, 12, 1 {
+//     VAL = POP();
+//     CMP(VAL);
+// })
+
 OPDEF(halt, 255, 0, {
     EXIT(EXIT_SUCCESS);
 }) // +

@@ -51,6 +51,14 @@ char *getStrMode(const FILE_MODE mode);
 void deleteEmptyLines(char *text);
 
 /**
+ * @brief Strip line
+ * 
+ * @param line 
+ * @return char* 
+ */
+char *stripLine(char *line);
+
+/**
  * @brief Converts lines ending in '\n' to C-strings ending in '\0'
  * 
  * @param text 
