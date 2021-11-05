@@ -101,7 +101,7 @@ enum class EXIT_CODES
     #define IS_OK(function, exitOnError)            function
     #define IS_OK_WO_EXIT(function)                 function
     #define IS_OK_W_EXIT(function)                  function
-    #define IS_ERROR(function)                      if (0)
+    #define IS_ERROR(function)                      function;
     #define PRINT_ERROR_TRACING_MESSAGE(error_code)
     #define OBJECT_VERIFY(object, type)
     #define CHECK_SSCANF_RESULT(ret)

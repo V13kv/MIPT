@@ -5,6 +5,7 @@
 #define MNEMONICS_FORMAT                "%[a-z] %n"
 #define REGISTER_FORMAT                 "%2[a-z]%n"
 #define IMMEDIATE_VALUE_FORMAT          "%lf%n"
+#define EXCLUDE_COMMENTS_FORMAT         "%[^;]"
 
 const int MAX_MNEMONICS_STR_LENGTH        = 5;
 const int MAX_INSTRUCTION_ARGS_STR_LEN    = 50;

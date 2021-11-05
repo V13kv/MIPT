@@ -306,9 +306,13 @@ EXIT_CODES stackReallocation(stack_t *stack, REALLOC_MODES mode)
         stack_capacity_increase += (LEFT_CANARY_SIZE + RIGHT_CANARY_SIZE);
     #endif
 
+    // FIXME: исправить ошибку realloc'a кода doublr (сделать универсально)
     #if defined(STACK_CANARY) && STACK_CANARY == 1
-        stackElem_t *temp = (stackElem_t *) realloc(stack->data - 1,  // because we want to free canaries (left and right)
-                                                    LEFT_CANARY_SIZE + new_capacity * sizeof(stackElem_t) + RIGHT_CANARY_SIZE);
+        printf("Before realloc\n");
+        stackElem_t *temp = (stackElem_t *) realloc(&stack->data - sizeof(int),  // because we want to free canaries (left and right)
+                                                    sizeof(int) + new_capacity * sizeof(stackElem_t) + sizeof(int));
+                                                    //LEFT_CANARY_SIZE + new_capacity * sizeof(stackElem_t) + RIGHT_CANARY_SIZE);
+        printf("After realloc\n");
     #else
         stackElem_t *temp = (stackElem_t *) realloc(stack->data, new_capacity  * sizeof(stackElem_t));
     #endif
@@ -334,6 +338,8 @@ EXIT_CODES stackReallocation(stack_t *stack, REALLOC_MODES mode)
     stack->data = temp;
     stack->capacity = new_capacity;
 
+    printf("new stack capacity: %d\n", stack->capacity);
+
     // Poison new fields
     IS_OK_W_EXIT(sprayPoisonOnData(stack));
 
@@ -356,6 +362,7 @@ EXIT_CODES stackPush(stack_t *stack, stackElem_t value)
     if (stack->size == stack->capacity)
     {
         IS_OK_W_EXIT(stackReallocation(stack, REALLOC_MODES::INCREASE));
+        printf("REALLOCED\n");
     }
 
     stack->data[stack->size++] = value;

@@ -1,20 +1,26 @@
 push 3
+pop ax
+push ax
+pop [dx+1]
+push 127
+pop bx
 in
+push [dx+1]
 div
-push [dx+32.001]
 out
-jmp firstLabel
-call ___ThirdLabel123__
+call firstLabel
+jmp FOURTH_LABEL
 add
 
 firstLabel:
-    jmp FOURTH_LABEL
+    call ___ThirdLabel123__  ; why 5?
+    ret
 
 secondLabel:
     push 3
     push bx
     add
-    pop
+    pop cx
     mul
     sub
     div
@@ -23,7 +29,6 @@ secondLabel:
 ___ThirdLabel123__:
     push 97
     out
-    pop
     ret
 
 FOURTH_LABEL:
@@ -31,3 +36,4 @@ FOURTH_LABEL:
     push 16
     push 4
     halt
+
