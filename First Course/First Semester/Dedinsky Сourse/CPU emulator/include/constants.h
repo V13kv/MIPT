@@ -28,23 +28,23 @@
 
 #undef OPDEF
 
-// TODO: separate to REGISTER_OPCODES_TABLE and REGISTER_NAME_TABLE
-#define REGDEF(regName, regOpcode, ...) \
-    {                                   \
-        #regName,                       \
-        regOpcode                       \
-    },
+// // TODO: separate to REGISTER_OPCODES_TABLE and REGISTER_NAME_TABLE
+// #define REGDEF(regName, regOpcode, ...) \
+//     {                                   \
+//         #regName,                       \
+//         regOpcode                       \
+//     },
 
-    struct register_t
-    {
-        char *name;
-        int opcode;
-    };
+//     struct register_t
+//     {
+//         char *name;
+//         int opcode;
+//     };
 
-    const register_t REGISTERS_TABLE[] = {
-        #include "regdefs.h"
-    };
+//     const register_t REGISTERS_TABLE[] = {
+//         #include "regdefs.h"
+//     };
 
-    const size_t REGISTERS_TABLE_LENGTH = sizeof(REGISTERS_TABLE) / sizeof(REGISTERS_TABLE[0]);
+//     const size_t REGISTERS_TABLE_LENGTH = sizeof(REGISTERS_TABLE) / sizeof(REGISTERS_TABLE[0]);
 
-#undef REGDEF
+// #undef REGDEF

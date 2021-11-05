@@ -64,8 +64,8 @@ proc.exe: $(PROC_OBJS)
 $(ProcBinDir)/main.o: 	$(ProcSrcDir)/main.cpp $(TextIncDir)/text.h $(LibDir)/colors/colors.h $(IncDir)/processor/processor.h
 	g++ -c $(ProcSrcDir)/main.cpp $(CXXFLAGS) -o $(ProcBinDir)/main.o
 
-$(ProcBinDir)/processor.o: 	$(ProcSrcDir)/processor.cpp $(IncDir)/processor/processor.h $(LibDir)/stack/include/stack.h \
-							$(TextIncDir)/text.h
+$(ProcBinDir)/processor.o: 	$(ProcSrcDir)/processor.cpp $(IncDir)/processor/processor.h $(IncDir)/processor/settings.h \
+							$(LibDir)/stack/include/stack.h $(TextIncDir)/text.h $(LibDir)/colors/colors.h $(LibDir)/debug/debug.h
 	g++ -c $(ProcSrcDir)/processor.cpp $(CXXFLAGS) -o $(ProcBinDir)/processor.o
 
 $(StackBinDir)/stack.o $(HashBinDir)/hash.o:

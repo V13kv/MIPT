@@ -6,26 +6,32 @@
 
 #define GET_VALUE() cpuGetBytecodeValue(CPU, byteCode)
 
-#define PUSH(value)     cpuPush(CPU, value)
-#define POP()           cpuPop(CPU)
-#define JUMP()          cpuJump(CPU, byteCode)
-#define CALL()          cpuCall(CPU, byteCode)
-#define RET()           cpuRet(CPU)
-#define OUT()           cpuOut(CPU)
-#define OUTC()          cpuOutc(CPU)
-#define IN()            cpuIn(CPU)
-#define EXIT(exitCode)  cpuExit(CPU, byteCode, exitCode)
+#define PUSH(value)         cpuPush(CPU, value)
+#define POP()               cpuPop(CPU)
+#define MOVE_VALUE(value)   cpuMoveValue(CPU, byteCode, value)
+#define JUMP()              cpuJump(CPU, byteCode)
+#define JE()                cpuJE(CPU, byteCode)
+#define JL()                cpuJL(CPU, byteCode)
+#define JG()                cpuJG(CPU, byteCode)
+#define CALL()              cpuCall(CPU, byteCode)
+#define RET()               cpuRet(CPU)
+#define CMP()               cpuCmp(CPU)
+#define OUT()               cpuOut(CPU)
+#define OUTC()              cpuOutc(CPU)
+#define IN()                cpuIn(CPU)
+#define EXIT(exitCode)      cpuExit(CPU, byteCode, exitCode)
 
 // TODO: condition jumps, gpu commands
 
 // opMnemonics, opcode, argc, code
 OPDEF(push, 0, 1, {
-    VAL = GET_VALUE();  // TODO: support of memory, regs, immediate as GET_VALUE()
+    VAL = GET_VALUE();
     PUSH(VAL);
 }) // +
 
-OPDEF(pop, 1, 0, {
-    VAL = POP();
+OPDEF(pop, 1, 1, {
+    VAL = POP(); // TODO: support of pop ax; pop [ax]. Error check pop immediate (it is not possible)
+    MOVE_VALUE(VAL);
 }) // +
 
 OPDEF(add, 2, 0, {
@@ -76,11 +82,32 @@ OPDEF(ret, 10, 0, {
     RET();
 }) // +
 
-// TODO: support of cmp ax, dx; cmp [dx+32], ax; cmp [dx+32], [ax+41]; cmp ax, 123
-// OPDEF(cmp, 12, 1 {
-//     VAL = POP();
-//     CMP(VAL);
-// })
+// TODO: check
+OPDEF(sqrt, 12, 0, {
+    VAL = sqrt(POP());
+    PUSH(VAL);
+})
+
+// TODO: check
+OPDEF(je, 13, 1, {
+    JE();
+})
+
+// TODO: check
+OPDEF(jg, 16, 1, {
+    JG();
+})
+
+// TODO: check
+OPDEF(jl, 14, 1, {
+    JL();
+})
+
+// ******TODO: support of cmp ax, dx; cmp [dx+32], ax; cmp [dx+32], [ax+41]; cmp ax, 123
+// TODO: check
+OPDEF(cmp, 15, 0, {
+    CMP();
+})
 
 OPDEF(halt, 255, 0, {
     EXIT(EXIT_SUCCESS);

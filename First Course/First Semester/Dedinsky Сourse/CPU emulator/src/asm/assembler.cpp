@@ -11,9 +11,8 @@
 
 // TODO: 2 args support, strip command args
 
-typedef unsigned int offset;
-
 static EXIT_CODES parseCommand(text_line_t *line, command_t *command, labels_t *unprocCommandArgLabels, const int globalOffset);
+static EXIT_CODES normalizeCodeLine(text_line_t *line);
 static EXIT_CODES hasArguments(char *mnemonics, bool *hasArgs);
 static EXIT_CODES isSpecialInstruction(command_t *command, bool *isSpecInstr);
 static EXIT_CODES checkMnemonics(char *mnemonics);
@@ -64,30 +63,69 @@ EXIT_CODES assembly(text_t *code, char *outputFileName)
     command_t command = {};
     for (int line = 0; line < code->lines_count; ++line)
     {
-        code->lines[line].beginning = stripLine(code->lines[line].beginning);
-        if (isLabel(code->lines[line].beginning, LABEL_LINE_FORMAT))
-        {
-            IS_OK_W_EXIT(initLabel(code->lines[line].beginning, &labels, LABEL_LINE_FORMAT, globalOffset));
-        }
-        else
-        {
-            // Parse command
-            IS_OK_W_EXIT(parseCommand(&code->lines[line], &command, &unprocCommandArgLabels, globalOffset));
-            IS_OK_W_EXIT(encodeCommand(&command));
-            IS_OK_W_EXIT(exportEncodedCommand(&command, fs));
-            
-            // Update global offset (for label's offset identification)
-            globalOffset += command.encoded.bytes;
+        IS_OK_W_EXIT(normalizeCodeLine(&code->lines[line]));
 
-            IS_OK_W_EXIT(resetCommand(&command));  
+        if (code->lines[line].length != 0)
+        {
+            printf("Wroking on line %s\n", code->lines[line].beginning);
+            
+            if (isLabel(code->lines[line].beginning, LABEL_LINE_FORMAT))
+            {
+                IS_OK_W_EXIT(initLabel(code->lines[line].beginning, &labels, LABEL_LINE_FORMAT, globalOffset));
+            }
+            else
+            {
+                // Parse command
+                IS_OK_W_EXIT(parseCommand(&code->lines[line], &command, &unprocCommandArgLabels, globalOffset));
+                printf(GREEN "\t[+] " RESET "Parsing\n");
+
+                IS_OK_W_EXIT(encodeCommand(&command));
+                printf(GREEN "\t[+] " RESET "Encoding\n");
+
+                IS_OK_W_EXIT(exportEncodedCommand(&command, fs));
+                printf(GREEN "\t[+] " RESET "Exporting\n");
+                
+                // Update global offset (for label's offset identification)
+                globalOffset += command.encoded.bytes;
+
+                IS_OK_W_EXIT(resetCommand(&command));  
+            }
         }
     }
     
     IS_OK_W_EXIT(fillUnprocCommandArgLabels(&unprocCommandArgLabels, &labels, fs));
+    printf(GREEN "[+] Translation successfully done\n" RESET);
+
+    // for (int label = 0; label < labels.totalLabels; ++label)
+    // {
+    //     printf("#%d. Name: %s\nOffset: %ld\n", label, labels.labels[label].name, labels.labels[label].offset);
+    // }
 
     IS_OK_W_EXIT(labelsDtor(&unprocCommandArgLabels));
     IS_OK_W_EXIT(labelsDtor(&labels));
     fclose(fs);
+
+    return EXIT_CODES::NO_ERRORS;
+}
+
+static EXIT_CODES normalizeCodeLine(text_line_t *line)
+{
+    // Error check
+    if (line == NULL)
+    {
+        PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::PASSED_OBJECT_IS_NULLPTR);
+        return EXIT_CODES::PASSED_OBJECT_IS_NULLPTR;
+    }
+
+    // Beautifying
+    char beautified[MAX_MNEMONICS_STR_LENGTH + MAX_INSTRUCTION_ARGS_STR_LEN] = {};
+    int ret = sscanf(line->beginning, EXCLUDE_COMMENTS_FORMAT, beautified);
+    CHECK_SSCANF_RESULT(ret);
+
+    strcpy(line->beginning, beautified);
+    line->length = strlen(line->beginning);
+
+    line->beginning = stripLine(line->beginning);
 
     return EXIT_CODES::NO_ERRORS;
 }
@@ -127,6 +165,8 @@ static EXIT_CODES parseCommand(text_line_t *line, command_t *command, labels_t *
     bool hasArgs = true;
     IS_OK_W_EXIT(hasArguments(command->mnemonics, &hasArgs));
 
+    // printf("command->mnemonics: %s; ", command->mnemonics);
+    // printf("hashArguments: %d\n", hasArgs);
     if (hasArgs)
     {
         // Check for whitespace between mnemonics and arguments
@@ -183,6 +223,18 @@ static EXIT_CODES isSpecialInstruction(command_t *command, bool *isSpecInstr)
 
     // Check
     if (!strcmp(command->mnemonics, "jmp"))
+    {
+        *isSpecInstr = true;
+    }
+    else if (!strcmp(command->mnemonics, "je"))
+    {
+        *isSpecInstr = true;
+    }
+    else if (!strcmp(command->mnemonics, "jl"))
+    {
+        *isSpecInstr = true;
+    }
+    else if (!strcmp(command->mnemonics, "jg"))
     {
         *isSpecInstr = true;
     }
@@ -375,16 +427,35 @@ static EXIT_CODES checkRegisterForCorrectness(char *reg)
     }
 
     // Check
-    for (size_t regName = 0; regName < REGISTERS_TABLE_LENGTH; ++regName)
+    if (!strcmp(reg, "ax"))
     {
-        if (!strcmp(reg, REGISTERS_TABLE[regName].name))
-        {
-            return EXIT_CODES::NO_ERRORS;
-        }
+        return EXIT_CODES::NO_ERRORS;
+    }
+    else if (!strcmp(reg, "bx"))
+    {
+        return EXIT_CODES::NO_ERRORS;
+    }
+    else if (!strcmp(reg, "cx"))
+    {
+        return EXIT_CODES::NO_ERRORS;
+    }
+    else if (!strcmp(reg, "dx"))
+    {
+        return EXIT_CODES::NO_ERRORS;
+    }
+    else
+    {
+        PRINT_ERROR_TRACING_MESSAGE(ASM_EXIT_CODES::UNKNOWN_COMMAND_REGISTER);
+        return EXIT_CODES::BAD_OBJECT_PASSED;
     }
 
-    PRINT_ERROR_TRACING_MESSAGE(ASM_EXIT_CODES::UNKNOWN_COMMAND_REGISTER);
-    return EXIT_CODES::BAD_OBJECT_PASSED;
+    // for (size_t regName = 0; regName < REGISTERS_TABLE_LENGTH; ++regName)
+    // {
+    //     if (!strcmp(reg, REGISTERS_TABLE[regName].name))
+    //     {
+    //         return EXIT_CODES::NO_ERRORS;
+    //     }
+    // }
 }
 
 // TODO: Support of -, etc (*additional all math ops as functions, like +(ax, 123) etc)
@@ -474,17 +545,43 @@ static EXIT_CODES encodeRegisterArgument(command_t *command, char *regStr)
     }
 
     // Encode
-    for (size_t reg = 0; reg < REGISTERS_TABLE_LENGTH; ++reg)
+    if (!strcmp(regStr, "ax"))
     {
-        if (!strcmp(regStr, REGISTERS_TABLE[reg].name))
-        {
-            command->encoded.byteData[command->encoded.bytes] = (byte) REGISTERS_TABLE[reg].opcode;
-            return EXIT_CODES::NO_ERRORS;
-        }
+        command->encoded.byteData[command->encoded.bytes] = 0;  // ax opcode
+        return EXIT_CODES::NO_ERRORS;
+    }
+    else if (!strcmp(regStr, "bx"))
+    {
+        command->encoded.byteData[command->encoded.bytes] = 1;  // bx opcode
+        return EXIT_CODES::NO_ERRORS;
+    }
+    else if (!strcmp(regStr, "cx"))
+    {
+        command->encoded.byteData[command->encoded.bytes] = 2;  // cx opcode
+        return EXIT_CODES::NO_ERRORS;
+    }
+    else if (!strcmp(regStr, "dx"))
+    {
+        command->encoded.byteData[command->encoded.bytes] = 3;  // dx opcode
+        return EXIT_CODES::NO_ERRORS;
+    }
+    else
+    {
+        PRINT_ERROR_TRACING_MESSAGE(ASM_EXIT_CODES::UNKNOWN_COMMAND_REGISTER);
+        return EXIT_CODES::BAD_OBJECT_PASSED;
     }
 
-    PRINT_ERROR_TRACING_MESSAGE(ASM_EXIT_CODES::UNKNOWN_COMMAND_REGISTER);
-    return EXIT_CODES::BAD_OBJECT_PASSED;
+    // for (size_t reg = 0; reg < REGISTERS_TABLE_LENGTH; ++reg)
+    // {
+    //     if (!strcmp(regStr, REGISTERS_TABLE[reg].name))
+    //     {
+    //         command->encoded.byteData[command->encoded.bytes] = (byte) REGISTERS_TABLE[reg].opcode;
+    //         return EXIT_CODES::NO_ERRORS;
+    //     }
+    // }
+
+    // PRINT_ERROR_TRACING_MESSAGE(ASM_EXIT_CODES::UNKNOWN_COMMAND_REGISTER);
+    // return EXIT_CODES::BAD_OBJECT_PASSED;
 }
 
 static EXIT_CODES encodeImmediateArgument(command_t *command, char *immStr)

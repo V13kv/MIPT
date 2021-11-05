@@ -12,6 +12,7 @@
 #include "labels.h"
 
 typedef unsigned char byte;
+typedef unsigned int offset;
 
 enum class ASM_EXIT_CODES
 {

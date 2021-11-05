@@ -1,0 +1,119 @@
+in  ; a
+in  ; b
+in  ; c
+
+; b^2
+pop ax  ; extract c
+pop cx  ; extract b
+
+pop bx ; save `a` into bx
+push bx
+
+push cx ; push b to stack
+push cx ; push b to stack
+
+push cx ; push b to stack
+pop dx ; save b into dx
+
+mul  ; b*b
+
+; b^2 - 4ac
+pop cx
+push 4
+mul  ; 4*a
+push ax
+mul  ; 4*a*c
+push cx
+sub  ; b^2 - 4ac
+
+; check if b^2 - 4ac is positive
+pop cx
+push cx
+push 0
+cmp     ; cmp 0, b^2 - 4ac
+jg NoRoots
+
+; sqrt(b^2 - 4ac)
+sqrt
+
+; check
+push 0
+cmp  ; cmp 0, sqrt(b^2-4ac)
+je OneRoot      ; 0 == sqrt(d) - true  TODO: implement je
+jl TwoRoots     ; 0 < sqrt(D) TODO: implement jl
+
+NoRoots:
+    push 10
+    push 115
+    push 116
+    push 111
+    push 111
+    push 114
+    push 32
+    push 111
+    push 78
+
+    outc
+    outc
+    outc
+    outc
+    outc
+    outc
+    outc
+    outc
+    outc
+    jmp END
+
+TwoRoots:
+    pop cx  ; cx = 0
+
+    push dx ; push b
+    push 0
+    sub     ; -b
+
+    pop cx  ; cx = -b
+    pop ax  ; ax = sqrt(D)
+
+    push ax
+    push cx
+    add     ; -b + sqrt(D)
+
+    pop dx  ; dx = -b + sqrt(D)
+
+    push 2
+    push bx
+    mul     ; 2*a
+    pop bx  ; bx = 2*a
+
+    push bx
+    push dx
+    div     ; (-b + sqrt(D)) / 2a
+    out
+
+    push ax
+    push cx
+    sub     ; -b - sqrt(D)
+
+    pop dx  ; dx = -b - sqrt(D)
+
+    push bx
+    push dx
+    div     ; (-b - sqrt(D)) / 2a
+    out
+
+    jmp END
+
+OneRoot:
+    push 2
+    push bx
+    mul     ; 2*a
+
+    push dx  ; push `b`
+    push 0
+    sub      ; get -b
+
+    div     ; -b/2a
+    out
+
+END:
+    halt

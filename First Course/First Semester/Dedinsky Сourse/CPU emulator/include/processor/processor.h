@@ -1,12 +1,16 @@
 #ifndef PROCESSOR_H
 #define PROCESSOR_H
 
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 2
 #include "../../lib/debug/debug.h"
 #include "../../lib/stack/include/stack.h"
 #include "../../lib/text/include/text.h"
+#include "../regdefs.h"
+
+#undef DEBUG_LEVEL
 
 typedef unsigned char byte;
+typedef unsigned int offset;
 
 enum class PROCESSOR_EXIT_CODES
 {
@@ -25,40 +29,27 @@ enum class PROCESSOR_EXIT_CODES
     FAIL_DURING_TAKING_IMMEDIATE_VALUE,
     FAIL_DURING_CPU_DTOR_IN_HALT,
     BAD_TO_ACCESS_RAM_INDEX,
+    CANT_POP_VALUE_INTO_IMMEDIATE,
+    ERROR_DUMPING_PROCESSOR_STACK,
+    ERROR_COUNTING_INTERNAL_EXPRESSION_VALUE,
+    ERROR_DURING_JUMP,
+    ERROR_DURING_TAKING_SQUARE_ROOT,
 };
 
-struct common_reg_t
-{
-    const int code;
-    double value;
-};
+// TODO: RGBA struct for SFML: 4 char bytes and union (rgba, могу интерпретироват как int)
 
-struct ip_reg_t
-{
-    const int code;
-    int value;
-};
-
-// TODO: do normal regs and IP
-// TODO: do flags
+// ******TODO: do flags
 struct cpu_t
 {
-    stack_t stack   = {};
-    double *RAM     = NULL;
-    
-    #define REGDEF(unused, regCode, ...) { .code = regCode, .value = 0 },
-        
-        common_reg_t regs[5] = {
-            #include "../regdefs.h"
-        };
-        
-    #undef REGDEF
-
-    // ip_reg_t IP = {};
+    stack_t stack                       = {};
+    double *RAM                         = NULL;
+    double commonRegs[MAX_REGS_COUNT]   = {};  // Index is common register opcode, value - its value
+    int IP                              = 0;
 };
 
 EXIT_CODES cpuCtor(cpu_t *CPU);
 EXIT_CODES cpuDtor(cpu_t *CPU);
+EXIT_CODES cpuDump(cpu_t *CPU, text_t *byteCode);
 
 EXIT_CODES cpuExecuteBytecode(text_t *byteCode, cpu_t *CPU);
 

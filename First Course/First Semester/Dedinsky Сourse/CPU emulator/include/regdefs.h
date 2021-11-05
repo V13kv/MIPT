@@ -1,9 +1,9 @@
-REGDEF(ax, 0)
+#define MAX_REGS_COUNT 4
 
-REGDEF(dx, 3)
+// REGDEF(ax, 0)
 
-REGDEF(cx, 2)
+// REGDEF(dx, 3)
 
-REGDEF(bx, 1)
+// REGDEF(cx, 2)
 
-REGDEF(ip, 4)
+// REGDEF(bx, 1)
