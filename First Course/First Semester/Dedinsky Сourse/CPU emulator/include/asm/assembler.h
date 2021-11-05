@@ -27,12 +27,10 @@ enum class ASM_EXIT_CODES
 
 struct encoded_command_t
 {
-    // TODO: char to byte
     byte byteData[MAX_ENCODED_COMMAND_LENGTH]   = {};
     int bytes                                   = 0;
 };
 
-// ******TODO: add specialCommand field (determines whether instruction is one of jmp, call *etc...)
 struct command_t
 {
     char mnemonics[MAX_MNEMONICS_STR_LENGTH]                            = {};
