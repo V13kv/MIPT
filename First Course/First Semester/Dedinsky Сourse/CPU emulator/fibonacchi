@@ -1,0 +1,57 @@
+in  ; number of fib number in Fibonacchi row
+
+; init iterator
+push 0
+pop [0]
+
+; init compare value (with iterator)
+pop [1]
+push 2
+push [1]
+sub
+pop [1]
+
+; init fib1
+push 1
+pop [2]
+
+; init fib2
+push 1
+pop [3]
+
+; main FIB
+FIB:
+    ; check for base condition
+    push [1]
+    push [0]
+    cmp     ; cmp i, n-2
+    jg END
+    je END
+
+    ; clear stack
+    pop ax
+    pop [0]
+    pop [1]
+
+    ; main calculations
+    push [2]
+    push [3]
+    add
+    pop [4]
+
+    push [3]
+    pop [2]
+
+    push [4]
+    pop [3]
+
+    push 1
+    push [0]
+    add
+    pop [0]
+    jmp FIB
+
+END:
+    push [3]
+    out
+    halt

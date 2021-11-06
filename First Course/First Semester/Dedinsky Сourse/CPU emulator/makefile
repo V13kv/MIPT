@@ -58,15 +58,18 @@ PROC_OBJS = $(ProcBinDir)/main.o $(ProcBinDir)/processor.o \
 			$(TextBinDir)/text.o $(TextBinDir)/file.o \
 			$(StackBinDir)/stack.o $(HashBinDir)/hash.o
 
+CSFML_LIBDIR = C:/CSFML-2.5.1-windows-64-bit/lib/msvc
+CSFML_INC = C:/CSFML-2.5.1-windows-64-bit/include
+
 proc.exe: $(PROC_OBJS)
-	g++ $(PROC_OBJS) -o proc.exe
+	g++ $(PROC_OBJS) -L$(CSFML_LIBDIR) -lcsfml-graphics -o proc.exe
 
 $(ProcBinDir)/main.o: 	$(ProcSrcDir)/main.cpp $(TextIncDir)/text.h $(LibDir)/colors/colors.h $(IncDir)/processor/processor.h
-	g++ -c $(ProcSrcDir)/main.cpp $(CXXFLAGS) -o $(ProcBinDir)/main.o
+	g++ -c $(ProcSrcDir)/main.cpp -I$(CSFML_INC) -L$(CSFML_LIBDIR) -lcsfml-graphics $(CXXFLAGS) -o $(ProcBinDir)/main.o
 
 $(ProcBinDir)/processor.o: 	$(ProcSrcDir)/processor.cpp $(IncDir)/processor/processor.h $(IncDir)/processor/settings.h \
 							$(LibDir)/stack/include/stack.h $(TextIncDir)/text.h $(LibDir)/colors/colors.h $(LibDir)/debug/debug.h
-	g++ -c $(ProcSrcDir)/processor.cpp $(CXXFLAGS) -o $(ProcBinDir)/processor.o
+	g++ -c $(ProcSrcDir)/processor.cpp -I$(CSFML_INC) -L$(CSFML_LIBDIR) -lcsfml-graphics $(CXXFLAGS) -o $(ProcBinDir)/processor.o
 
 $(StackBinDir)/stack.o $(HashBinDir)/hash.o:
 	"$(MAKE)" -C  "$(ProjectPath)/$(LibDir)/stack/" makefile

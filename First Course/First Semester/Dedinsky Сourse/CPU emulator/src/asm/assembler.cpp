@@ -122,10 +122,9 @@ static EXIT_CODES normalizeCodeLine(text_line_t *line)
     int ret = sscanf(line->beginning, EXCLUDE_COMMENTS_FORMAT, beautified);
     CHECK_SSCANF_RESULT(ret);
 
-    strcpy(line->beginning, beautified);
+    strcpy(line->beginning, stripLine(beautified));
     line->length = strlen(line->beginning);
-
-    line->beginning = stripLine(line->beginning);
+    // strcpy(line->beginning, beautified);
 
     return EXIT_CODES::NO_ERRORS;
 }
@@ -227,6 +226,10 @@ static EXIT_CODES isSpecialInstruction(command_t *command, bool *isSpecInstr)
         *isSpecInstr = true;
     }
     else if (!strcmp(command->mnemonics, "je"))
+    {
+        *isSpecInstr = true;
+    }
+    else if (!strcmp(command->mnemonics, "jne"))
     {
         *isSpecInstr = true;
     }

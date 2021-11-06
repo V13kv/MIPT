@@ -1,0 +1,5 @@
+; Create window
+ginit
+
+INFINITE_LOOP:
+    jmp INFINITE_LOOP
