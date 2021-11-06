@@ -1,4 +1,5 @@
 #include <math.h> // for fabs
+#include <SFML/Graphics.h>
 
 #include "../../lib/colors/colors.h"
 #include "../../lib/stack/include/stack.h"
@@ -24,7 +25,7 @@ EXIT_CODES cpuCtor(cpu_t *CPU)
     }
 
     // RAM init
-    CPU->RAM = (double *) calloc(MIN_RAM_SIZE, sizeof(double));
+    CPU->RAM = (double *) calloc(MAX_RAM_SIZE, sizeof(double));
     CHECK_CALLOC_RESULT(CPU->RAM);
 
     return EXIT_CODES::NO_ERRORS;
@@ -462,36 +463,11 @@ static EXIT_CODES cpuOutc(cpu_t *CPU)
         PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::PASSED_OBJECT_IS_NULLPTR);
         return EXIT_CODES::PASSED_OBJECT_IS_NULLPTR;
     }
-    // printf("HERE\n");
-    // Output char
-    // printf("HERE: %c\n", (int) CPU->stack.data[CPU->stack.size - 1]);
-    printf("%c\n", (int) CPU->stack.data[CPU->stack.size - 1]);
+
+    printf("%c", (int) cpuPop(CPU));
 
     return EXIT_CODES::NO_ERRORS;
 }
-
-// TODO: cpuCmp() implementation
-/*
-static EXIT_CODES cpuCmp(cpu_t *CPU, double val1, double val2)
-{
-    // Error check
-    if (CPU == NULL)
-    {
-        PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::PASSED_OBJECT_IS_NULLPTR);
-        return EXIT_CODES::PASSED_OBJECT_IS_NULLPTR;
-    }
-
-    // Compare
-    // TODO: put comparison result as flag into processor
-    if (fabs(val1 - val2) < EPS)
-    {
-        // Values are equal
-        
-    }
-
-    return EXIT_CODES::NO_ERRORS;
-}
-*/
 
 static EXIT_CODES cpuMoveValue(cpu_t *CPU, text_t *byteCode, double value)
 {
@@ -548,7 +524,6 @@ static EXIT_CODES cpuMoveValue(cpu_t *CPU, text_t *byteCode, double value)
     return EXIT_CODES::NO_ERRORS;
 }
 
-//FIXME: CHECK
 static EXIT_CODES cpuCmp(cpu_t *CPU)
 {
     // Error check
@@ -592,7 +567,6 @@ static EXIT_CODES cpuCmp(cpu_t *CPU)
     return EXIT_CODES::NO_ERRORS;
 }
 
-//FIXME: CHECK
 static EXIT_CODES cpuJE(cpu_t *CPU, text_t *byteCode)
 {
     // Error check
@@ -625,7 +599,6 @@ static EXIT_CODES cpuJE(cpu_t *CPU, text_t *byteCode)
     return EXIT_CODES::NO_ERRORS;
 }
 
-//FIXME: CHECK
 static EXIT_CODES cpuJL(cpu_t *CPU, text_t *byteCode)
 {
     // Error check
@@ -658,7 +631,6 @@ static EXIT_CODES cpuJL(cpu_t *CPU, text_t *byteCode)
     return EXIT_CODES::NO_ERRORS;
 }
 
-// FIXME: CHECK
 static EXIT_CODES cpuJG(cpu_t *CPU, text_t *byteCode)
 {
     // Error check
@@ -691,8 +663,40 @@ static EXIT_CODES cpuJG(cpu_t *CPU, text_t *byteCode)
     return EXIT_CODES::NO_ERRORS;
 }
 
-#define OPDEF(unused, opcode, argc, code)   \
-    case ((byte) opcode): printf("mnemonics now: %s\n", #unused);{ code } break; //
+static EXIT_CODES cpuJNE(cpu_t *CPU, text_t *byteCode)
+{
+    // Error check
+    if (CPU == NULL || byteCode == NULL)
+    {
+        PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::PASSED_OBJECT_IS_NULLPTR);
+        return EXIT_CODES::PASSED_OBJECT_IS_NULLPTR;
+    }
+
+    // Jump if equal
+    int cmpResult = (int) CPU->stack.data[CPU->stack.size - 1];
+    switch (cmpResult)
+    {
+        case -1:
+        case 1:
+            IS_ERROR(cpuJump(CPU, byteCode))
+            {
+                PRINT_ERROR_TRACING_MESSAGE(PROCESSOR_EXIT_CODES::ERROR_DURING_JUMP);
+                return EXIT_CODES::BAD_OBJECT_PASSED;
+            }
+            cpuPop(CPU);
+            break;
+
+        case 0:
+        default:
+            CPU->IP += sizeof(offset);
+            break;
+    }
+
+    return EXIT_CODES::NO_ERRORS;
+}
+
+#define OPDEF(unused, opcode, argc, code, ...)   \
+    case ((byte) opcode): { code }; break; // printf("mnemonics now: %s\n", #unused); 
 
 static EXIT_CODES cpuExecuteCommand(cpu_t *CPU, text_t *byteCode)
 {
@@ -707,6 +711,7 @@ static EXIT_CODES cpuExecuteCommand(cpu_t *CPU, text_t *byteCode)
     double val     = DEFAULT_DOUBLE_VALUE;
     double val1    = DEFAULT_DOUBLE_VALUE;
     double val2    = DEFAULT_DOUBLE_VALUE;
+    sfRenderWindow *window = {};
 
     byte opcode = (byte) byteCode->data[CPU->IP++];    
     switch(opcode)
@@ -733,17 +738,17 @@ EXIT_CODES cpuExecuteBytecode(text_t *byteCode, cpu_t *CPU)
     }
     
     // Execution
+    // char i;
     while ((size_t) CPU->IP < byteCode->size)
     {
-        // cpuDump(CPU, byteCode);
-        // printf("IP. Code: %d. Value: %lf\n", CPU->regs[4].code, CPU->regs[4].value);
-        // printf("\tWorking on 0x%x byte\n", (byte) byteCode->data[(int) CPU->regs[4].value]);
+        cpuDump(CPU, byteCode);
         IS_ERROR(cpuExecuteCommand(CPU, byteCode))
         {
             PRINT_ERROR_TRACING_MESSAGE(PROCESSOR_EXIT_CODES::BAD_BYTECODE_PASSED);
             return EXIT_CODES::BAD_OBJECT_PASSED;
         }
         // stackDump(&CPU->stack);
+        // scanf("%c", &i);    
     }
 
     return EXIT_CODES::NO_ERRORS;

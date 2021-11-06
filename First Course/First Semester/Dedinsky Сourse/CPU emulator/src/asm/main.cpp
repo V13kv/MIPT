@@ -4,14 +4,14 @@
 #include "../../include/asm/assembler.h"
 
 void hint();
-char *getFileName(int argc, char **argv);
+char *getFileName(int argc, char **argv, int fileIndex);
 
 int main(int argc, char **argv)
 {
     text_t code = {};
-    textCtor(&code, getFileName(argc, argv), FILE_MODE::R);
+    textCtor(&code, getFileName(argc, argv, 1), FILE_MODE::R);
 
-    assembly(&code, "asm.bin");
+    assembly(&code, getFileName(argc, argv, 2));
 
     textDtor(&code);
     return 0;
@@ -20,15 +20,15 @@ int main(int argc, char **argv)
 void hint()
 {
     printf(RED "Incorrect inline argument input!\n" RESET);
-    printf("prog.exe <file_name>\n");
+    printf("prog.exe <file_name> <output_file_name>\n");
 }
 
-char *getFileName(int argc, char *argv[])
+char *getFileName(int argc, char *argv[], int fileIndex)
 {
     char *file_name = NULL;
-    if (argc == 2)
+    if (argc >= fileIndex + 1)
     {
-        file_name = argv[1];
+        file_name = argv[fileIndex];
     }
     else
     {

@@ -2,45 +2,105 @@ in  ; a
 in  ; b
 in  ; c
 
-; b^2
-pop ax  ; extract c
-pop cx  ; extract b
+pop ax  ; ax = c
+pop cx  ; cx = b
+pop bx ; bx = a
 
-pop bx ; save `a` into bx
+
+; -------a == 0?-------
 push bx
+push 0
+cmp     ; cmp 0, a
 
-push cx ; push b to stack
-push cx ; push b to stack
+call CLEAR_COEFFICIENTS
+push [1]
 
-push cx ; push b to stack
-pop dx ; save b into dx
+jne SOLVE_QUADRATIC_EQUATION
+pop [1]
+; ---------------------
 
-mul  ; b*b
 
-; b^2 - 4ac
-pop cx
-push 4
-mul  ; 4*a
+; -------b == 0?-------
+push cx
+push 0
+cmp     ; cmp 0, b
+
+call CLEAR_COEFFICIENTS
+push [1]
+
+jne SOLVE_LINEAR_EQUATION
+pop [1]
+; ---------------------
+
+
+; -------c == 0?-------
 push ax
-mul  ; 4*a*c
-push cx
-sub  ; b^2 - 4ac
-
-; check if b^2 - 4ac is positive
-pop cx
-push cx
 push 0
-cmp     ; cmp 0, b^2 - 4ac
-jg NoRoots
+cmp     ; cmp 0, c
 
-; sqrt(b^2 - 4ac)
-sqrt
+jne NoRoots
+pop [1]
+; ---------------------
 
-; check
-push 0
-cmp  ; cmp 0, sqrt(b^2-4ac)
-je OneRoot      ; 0 == sqrt(d) - true  TODO: implement je
-jl TwoRoots     ; 0 < sqrt(D) TODO: implement jl
+; a = 0, b = 0, c = 0 => solution is all real values
+push 10
+push 108
+push 97
+push 101
+push 114
+push 32
+push 108
+push 108
+push 97
+
+outc
+outc
+outc
+outc
+outc
+outc
+outc
+outc
+outc
+jmp END
+
+SOLVE_QUADRATIC_EQUATION:
+    push bx
+
+    push cx ; push b to stack
+    push cx ; push b to stack
+
+    push cx ; push b to stack
+    pop dx ; save b into dx
+
+    mul  ; b*b
+
+    ; b^2 - 4ac
+    pop cx
+    push 4
+    mul  ; 4*a
+    push ax
+    mul  ; 4*a*c
+    push cx
+    sub  ; b^2 - 4ac
+
+    ; check if b^2 - 4ac is positive
+    pop [0]
+    push [0]
+    push 0
+    cmp     ; cmp 0, b^2 - 4ac
+    jg NoRoots
+    pop [0]
+    pop [0]
+
+    ; sqrt(b^2 - 4ac)
+    sqrt
+
+    ; check
+    push 0
+    cmp  ; cmp 0, sqrt(b^2-4ac)
+    je OneRoot      ; 0 == sqrt(d) - true
+    jl TwoRoots     ; 0 < sqrt(D)
 
 NoRoots:
     push 10
@@ -90,6 +150,9 @@ TwoRoots:
     div     ; (-b + sqrt(D)) / 2a
     out
 
+    push 32
+    outc    ; print whitespace
+
     push ax
     push cx
     sub     ; -b - sqrt(D)
@@ -117,3 +180,23 @@ OneRoot:
 
 END:
     halt
+
+
+CLEAR_COEFFICIENTS:
+    pop dx  ; return address
+    pop [1]  ; save comparison result
+    pop [0]
+    pop [0]
+    push dx
+    ret
+
+SOLVE_LINEAR_EQUATION:
+    push cx     ; b
+
+    push ax     ; c
+    push 0
+    sub         ; -c
+
+    div         ; -c/b
+    out
+    jmp END
