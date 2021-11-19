@@ -4,7 +4,6 @@
 
 #include "../include/list.h"
 
-// TODO: get rid of copypaste
 int main()
 {
     srand(time(NULL));
@@ -12,11 +11,8 @@ int main()
     list_t list = {};
     IS_ERROR(listCtor(&list, 4))
     {
-        PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::CONSTRUCTOR_ERROR);
-        listDump(&list);
-        return EXIT_FAILURE;
+        EXIT_WITH_TRACE(EXIT_CODES::CONSTRUCTOR_ERROR, EXIT_FAILURE);
     }
-
 
     for (int i = 0; i < 8; ++i)
     {
@@ -34,9 +30,7 @@ int main()
 
     IS_ERROR(listDtor(&list))
     {
-        PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::DESTRUCTOR_ERROR);
-        listDump(&list);
-        return EXIT_FAILURE;
+        EXIT_WITH_TRACE(EXIT_CODES::DESTRUCTOR_ERROR, EXIT_FAILURE);
     }
 
     return 0;

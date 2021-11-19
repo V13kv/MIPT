@@ -66,6 +66,10 @@ enum class EXIT_CODES
                 return EXIT_CODES::BAD_OBJECT_PASSED;                                   \
             }                                                                           \
         } while (0)
+    
+    #define EXIT_WITH_TRACE(funcExitCodeTracingMsg, programExitCode)    \
+        PRINT_ERROR_TRACING_MESSAGE(funcExitCodeTracingMsg);            \
+        exit(programExitCode);
 
     #define CHECK_SSCANF_RESULT(ret)                                            \
         do                                                                      \
