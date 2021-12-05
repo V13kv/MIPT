@@ -8,6 +8,7 @@
 enum class AKINATOR_EXIT_CODES
 {
     AKINATOR_UNKNOWN_PLAY_MODE,
+    ERROR_READING_LINE,
 };
 
 enum class AKINATOR_GAME_MODES
@@ -23,7 +24,7 @@ EXIT_CODES akinatorGetPlayMode(AKINATOR_GAME_MODES *mode);
 EXIT_CODES akinatorPlayGame(AKINATOR_GAME_MODES mode, tree_t *tree);
 
 EXIT_CODES akinatorDumpPlayTree(tree_t *tree);
-EXIT_CODES akinatorGuessPlay(tree_t *tree);
+// EXIT_CODES akinatorGuessPlay(tree_t *tree);
 
 
 

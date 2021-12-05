@@ -6,11 +6,14 @@
 
 enum class TREE_EXIT_CODES
 {
+    ERROR_DURING_TREE_CONSTRUCTION_FROM_DATABASE,
 };
 
 enum class TREE_DATABASE_EXIT_CODES
 {
     ERROR_DURING_READING_DATABASE_TREE_NODE,
+    ERROR_DURING_READING_DATABASE_LEFT_NODE,
+    ERROR_DURING_READING_DATABASE_RIGHT_NODE,
     DATABASE_READ_ERROR,
     DATABASE_STREAM_IS_EMPTY,
     BAD_DATABASE_FORMAT,
@@ -29,11 +32,8 @@ struct tree_t
     treeNode_t *root = NULL;
 };
 
-#define TO_STR(object) STRINGIFY(object)
 
-EXIT_CODES databaseRead(FILE *database, tree_t *tree);
-
-EXIT_CODES treeCtor(tree_t *tree, char *databaseFileName);
+EXIT_CODES treeCtorFromDatabase(tree_t *tree, char *databaseFileName);
 
 
 #endif  // TREE_H
