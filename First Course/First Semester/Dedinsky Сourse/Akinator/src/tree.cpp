@@ -7,6 +7,8 @@
 #include "../include/settings.h"
 #include "../include/tree.h"
 
+#define stackElem_t treeNode_t*
+#include "../lib/stack/include/stack.h"
 
 static EXIT_CODES databaseRead(FILE *database, tree_t *tree);
 static EXIT_CODES databaseReadNode(FILE *database, treeNode_t *node);
@@ -131,6 +133,70 @@ static EXIT_CODES databaseReadNode(FILE *database, treeNode_t *node)
             PRINT_ERROR_TRACING_MESSAGE(TREE_DATABASE_EXIT_CODES::BAD_DATABASE_FORMAT);
             return EXIT_CODES::BAD_OBJECT_PASSED;
         }
+    }
+
+    return EXIT_CODES::NO_ERRORS;
+}
+
+EXIT_CODES treeDFSWActionFunction(tree_t *tree, actionFunction func, FILE *outStream)
+{
+    // Error check
+    if (tree == NULL || func == NULL || outStream == NULL)
+    {
+        PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::PASSED_OBJECT_IS_NULLPTR);
+        return EXIT_CODES::PASSED_OBJECT_IS_NULLPTR;
+    }
+
+    // Main DFS
+    stack_t stack = {};
+    IS_ERROR(stackCtor(&stack))
+    {
+        PRINT_ERROR_TRACING_MESSAGE(STACK_EXIT_CODES::ERROR_DURING_STACK_CTOR);
+        return EXIT_CODES::BAD_FUNC_RESULT;
+    }
+
+    IS_ERROR(stackPush(&stack, tree->root))
+    {
+        PRINT_ERROR_TRACING_MESSAGE(STACK_EXIT_CODES::ERROR_DURING_STACK_PUSH);
+        return EXIT_CODES::BAD_FUNC_RESULT;
+    }
+
+    while (true)
+    {
+        // Get each new node from stack (queue)
+        treeNode_t *node = {};
+        IS_ERROR(stackPop(&stack, &node))
+        {
+            PRINT_ERROR_TRACING_MESSAGE(STACK_EXIT_CODES::ERROR_DURING_STACK_POP);
+            return EXIT_CODES::BAD_FUNC_RESULT;
+        }
+
+        // Push each child of a node
+        int nodeBranches = func(node, outStream);
+        if ((nodeBranches & NODE_HAS_LEFT_BRANCH) != 0)
+        {
+            IS_ERROR(stackPush(&stack, node->left))
+            {
+                PRINT_ERROR_TRACING_MESSAGE(TREE_EXIT_CODES::FAIL_TO_PUSH_NODES_LEFT_CHILD);
+                return EXIT_CODES::BAD_FUNC_RESULT;
+            }
+        }
+
+        if ((nodeBranches & NODE_HAS_RIGHT_BRANCH) != 0)
+        {
+            IS_ERROR(stackPush(&stack, node->right))
+            {
+                PRINT_ERROR_TRACING_MESSAGE(TREE_EXIT_CODES::FAIL_TO_PUSH_NODES_RIGHT_CHILD);
+                return EXIT_CODES::BAD_FUNC_RESULT;
+            }
+        }
+    }
+
+    // Destruction
+    IS_ERROR(stackDtor(&stack))
+    {
+        PRINT_ERROR_TRACING_MESSAGE(STACK_EXIT_CODES::ERROR_DURING_STACK_DTOR);
+        return EXIT_CODES::BAD_FUNC_RESULT;
     }
 
     return EXIT_CODES::NO_ERRORS;
