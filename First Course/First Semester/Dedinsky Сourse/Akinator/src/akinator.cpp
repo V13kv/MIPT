@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>  // for memset && strcpy
 
@@ -97,10 +98,19 @@ EXIT_CODES akinatorPlayGame(AKINATOR_GAME_MODES mode, tree_t *tree)
     switch (mode)
     {
         case AKINATOR_GAME_MODES::GUESS:
-            // akinatorGuessPlay(tree);
+            // IS_ERROR(akinatorGuessPlay(tree))
+            // {
+            //     PRINT_ERROR_TRACING_MESSAGE(AKINATOR_EXIT_CODES::ERROR_DURING_GUESS_PLAY);
+            //     return EXIT_CODES::BAD_FUNC_RESULT;
+            // }
             break;
         case AKINATOR_GAME_MODES::DUMP:
-            akinatorDumpPlayTree(tree);
+            // TODO: CHECK FOR CORRECTNESS
+            IS_ERROR(akinatorDumpPlayTree(tree))
+            {
+                PRINT_ERROR_TRACING_MESSAGE(AKINATOR_EXIT_CODES::ERROR_DURING_TREE_DUMP);
+                return EXIT_CODES::BAD_FUNC_RESULT;
+            }
             break;
         default:
             PRINT_ERROR_TRACING_MESSAGE(AKINATOR_EXIT_CODES::AKINATOR_UNKNOWN_PLAY_MODE);
@@ -108,6 +118,44 @@ EXIT_CODES akinatorPlayGame(AKINATOR_GAME_MODES mode, tree_t *tree)
     }
 
     return EXIT_CODES::NO_ERRORS;
+}
+
+// FIXME: maybe two if statements are not work properly (could be 2 same lines with left and right child for one node, test what happens)
+static int dumpNode(treeNode_t *node, FILE *outStream)
+{
+    // Error check
+    assert(node != NULL && outStream != NULL && "EXIT_CODES::PASSED_OBJECT_IS_NULLPTR");
+
+    // Dump node && its branches
+    int result = NODE_HAS_NOT_ANY_BRANCHES;
+    if (node->left != NULL)
+    {
+        // Dump node with branches (left and right)
+        fprintf(outStream, NODE_DUMP_W_LEFT_BRANCH_REGEXP, (void *) node, (void *) node->left, node->value);
+
+        // Dump node branches
+        fprintf(outStream, NODE_LEFT_BRANCH_DUMP_REGEXP, (void *) node, (void *) node->left);
+    
+        result |= NODE_HAS_LEFT_BRANCH;
+    }
+    
+    if (node->right != NULL)
+    {
+        fprintf(outStream, NODE_DUMP_W_RIGHT_BRANCH_REGEXP, (void *) node, node->value, (void *) node->right);
+        fprintf(outStream, NODE_RIGHT_BRANCH_DUMP_REGEXP, (void *) node, (void *) node->right);
+
+        result |= NODE_HAS_RIGHT_BRANCH;
+    }
+    
+    if (node->left == NULL && node->right == NULL)
+    {
+        // Dump node WO branches (left and right)
+        fprintf(outStream, NODE_DUMP_WO_BRANCHES_REGEXP, (void *) node, node->value);
+
+        result |= NODE_HAS_NOT_ANY_BRANCHES;
+    }
+
+    return result;
 }
 
 EXIT_CODES akinatorDumpPlayTree(tree_t *tree)
@@ -138,9 +186,11 @@ EXIT_CODES akinatorDumpPlayTree(tree_t *tree)
 
     // Dump
     fprintf(outStream, "digraph Tree {\n");
-
-    // TODO: implement DFS algorithm to construct objects for GRAPHVIZ
-
+    IS_ERROR(treeDFSWActionFunction(tree, dumpNode, outStream))
+    {
+        PRINT_ERROR_TRACING_MESSAGE(AKINATOR_EXIT_CODES::ERROR_DUMPING_TREE_VIA_DFS_FUNCTION);
+        return EXIT_CODES::BAD_FUNC_RESULT;
+    }
     fprintf(outStream, "}\n");
     
     // Destruction
@@ -152,6 +202,23 @@ EXIT_CODES akinatorDumpPlayTree(tree_t *tree)
 
     // Execute configured command
     system(command);
+
+    return EXIT_CODES::NO_ERRORS;
+}
+
+// TODO: implementation
+EXIT_CODES akinatorGuessPlay(tree_t *tree)
+{
+    // Error check
+    if (tree == NULL)
+    {
+        PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::PASSED_OBJECT_IS_NULLPTR);
+        return EXIT_CODES::PASSED_OBJECT_IS_NULLPTR;
+    }
+
+    // Guess play
+    // IS_ERROR(treeDFSWActionFunction(tree, guessNode, ))
+
 
     return EXIT_CODES::NO_ERRORS;
 }
