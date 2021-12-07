@@ -32,16 +32,15 @@ int main(int argc, char **argv)
         // Read playing mode
         akinatorGetPlayMode(&mode);
 
-        printf("mode: %d\n", (int) mode);
         // Process playing mode
-        // if (mode != AKINATOR_GAME_MODES::EXIT)
-        // {
-        //     akinatorPlayGame(mode, &tree);
-        // }
-        // else
-        // {
-        //     break;
-        // }
+        if (mode != AKINATOR_GAME_MODES::EXIT)
+        {
+            akinatorPlayGame(mode, &tree);
+        }
+        else
+        {
+            break;
+        }
     }
 
     return 0;

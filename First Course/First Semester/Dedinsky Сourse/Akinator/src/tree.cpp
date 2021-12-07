@@ -7,11 +7,10 @@
 #include "../include/settings.h"
 #include "../include/tree.h"
 
-#define stackElem_t treeNode_t*
 #include "../lib/stack/include/stack.h"
 
 static EXIT_CODES databaseRead(FILE *database, tree_t *tree);
-static EXIT_CODES databaseReadNode(FILE *database, treeNode_t *node);
+static EXIT_CODES databaseReadNode(FILE *database, treeNode_t **node);
 
 EXIT_CODES treeCtorFromDatabase(tree_t *tree, char *databaseFileName)
 {
@@ -49,7 +48,7 @@ static EXIT_CODES databaseRead(FILE *database, tree_t *tree)
     }
 
     // Read database
-    IS_ERROR(databaseReadNode(database, tree->root))
+    IS_ERROR(databaseReadNode(database, &tree->root))
     {
         PRINT_ERROR_TRACING_MESSAGE(TREE_DATABASE_EXIT_CODES::ERROR_DURING_READING_DATABASE_TREE_NODE);
         return EXIT_CODES::BAD_FUNC_RESULT;
@@ -58,7 +57,7 @@ static EXIT_CODES databaseRead(FILE *database, tree_t *tree)
     return EXIT_CODES::NO_ERRORS;
 }
 
-static EXIT_CODES databaseReadNode(FILE *database, treeNode_t *node)
+static EXIT_CODES databaseReadNode(FILE *database, treeNode_t **node)
 {
     // Error check
     if (database == NULL)
@@ -92,15 +91,15 @@ static EXIT_CODES databaseReadNode(FILE *database, treeNode_t *node)
     }
 
     // Allocate memory for new node
-    node = (treeNode_t *) calloc(1, sizeof(treeNode_t));
+    *node = (treeNode_t *) calloc(1, sizeof(treeNode_t));
     CHECK_CALLOC_RESULT(node);
 
     // Init new node `value` field
-    strcpy(node->value, treeNodeValue);
+    strcpy((*node)->value, treeNodeValue);
 
     // Init new node branches (`left` && `right` fields)
-    node->left = NULL;
-    node->right = NULL;
+    (*node)->left = NULL;
+    (*node)->right = NULL;
 
     // Fill other nodes
     char bracket[2] = {};
@@ -112,14 +111,14 @@ static EXIT_CODES databaseReadNode(FILE *database, treeNode_t *node)
         CHECK_UNGETC_RESULT(ret);
 
         // Fill left child
-        IS_ERROR(databaseReadNode(database, node->left))
+        IS_ERROR(databaseReadNode(database, &((*node)->left)))
         {
             PRINT_ERROR_TRACING_MESSAGE(TREE_DATABASE_EXIT_CODES::ERROR_DURING_READING_DATABASE_LEFT_NODE);
             return EXIT_CODES::BAD_FUNC_RESULT;
         }
 
         // Fill right child
-        IS_ERROR(databaseReadNode(database, node->right))
+        IS_ERROR(databaseReadNode(database, &((*node)->right)))
         {
             PRINT_ERROR_TRACING_MESSAGE(TREE_DATABASE_EXIT_CODES::ERROR_DURING_READING_DATABASE_RIGHT_NODE);
             return EXIT_CODES::BAD_FUNC_RESULT;
@@ -161,7 +160,7 @@ EXIT_CODES treeDFSWActionFunction(tree_t *tree, actionFunction func, FILE *outSt
         return EXIT_CODES::BAD_FUNC_RESULT;
     }
 
-    while (true)
+    while (stack.size > 0)
     {
         // Get each new node from stack (queue)
         treeNode_t *node = {};
@@ -173,7 +172,7 @@ EXIT_CODES treeDFSWActionFunction(tree_t *tree, actionFunction func, FILE *outSt
 
         // Push each child of a node
         int nodeBranches = func(node, outStream);
-        if ((nodeBranches & NODE_HAS_LEFT_BRANCH) != 0)
+        if (nodeBranches & NODE_HAS_LEFT_BRANCH)
         {
             IS_ERROR(stackPush(&stack, node->left))
             {
@@ -182,7 +181,7 @@ EXIT_CODES treeDFSWActionFunction(tree_t *tree, actionFunction func, FILE *outSt
             }
         }
 
-        if ((nodeBranches & NODE_HAS_RIGHT_BRANCH) != 0)
+        if (nodeBranches & NODE_HAS_RIGHT_BRANCH)
         {
             IS_ERROR(stackPush(&stack, node->right))
             {

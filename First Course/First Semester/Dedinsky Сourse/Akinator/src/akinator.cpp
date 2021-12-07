@@ -98,14 +98,13 @@ EXIT_CODES akinatorPlayGame(AKINATOR_GAME_MODES mode, tree_t *tree)
     switch (mode)
     {
         case AKINATOR_GAME_MODES::GUESS:
-            // IS_ERROR(akinatorGuessPlay(tree))
-            // {
-            //     PRINT_ERROR_TRACING_MESSAGE(AKINATOR_EXIT_CODES::ERROR_DURING_GUESS_PLAY);
-            //     return EXIT_CODES::BAD_FUNC_RESULT;
-            // }
+            IS_ERROR(akinatorGuessPlay(tree))
+            {
+                PRINT_ERROR_TRACING_MESSAGE(AKINATOR_EXIT_CODES::ERROR_DURING_GUESS_PLAY);
+                return EXIT_CODES::BAD_FUNC_RESULT;
+            }
             break;
         case AKINATOR_GAME_MODES::DUMP:
-            // TODO: CHECK FOR CORRECTNESS
             IS_ERROR(akinatorDumpPlayTree(tree))
             {
                 PRINT_ERROR_TRACING_MESSAGE(AKINATOR_EXIT_CODES::ERROR_DURING_TREE_DUMP);
@@ -120,7 +119,6 @@ EXIT_CODES akinatorPlayGame(AKINATOR_GAME_MODES mode, tree_t *tree)
     return EXIT_CODES::NO_ERRORS;
 }
 
-// FIXME: maybe two if statements are not work properly (could be 2 same lines with left and right child for one node, test what happens)
 static int dumpNode(treeNode_t *node, FILE *outStream)
 {
     // Error check
@@ -128,26 +126,35 @@ static int dumpNode(treeNode_t *node, FILE *outStream)
 
     // Dump node && its branches
     int result = NODE_HAS_NOT_ANY_BRANCHES;
-    if (node->left != NULL)
+    if (node->left != NULL && node->right != NULL)
     {
-        // Dump node with branches (left and right)
-        fprintf(outStream, NODE_DUMP_W_LEFT_BRANCH_REGEXP, (void *) node, (void *) node->left, node->value);
+        // Dump node with both branches (left and right)
+        fprintf(outStream, NODE_DUMP_W_BOTH_BRANCHES_REGEXP, (void *) node, (void *) node->left, node->value, (void *) node->right);
+    
+        // Dump node branches
+        fprintf(outStream, NODE_LEFT_BRANCH_DUMP_REGEXP, (void *) node, (void *) node->left);
+        fprintf(outStream, NODE_RIGHT_BRANCH_DUMP_REGEXP, (void *) node, (void *) node->right);
+
+        result |= (NODE_HAS_LEFT_BRANCH | NODE_HAS_RIGHT_BRANCH);
+    }
+    else if (node->left != NULL)
+    {
+        // Dump node with branch
+        fprintf(outStream, NODE_DUMP_W_ONLY_LEFT_BRANCH_REGEXP, (void *) node, (void *) node->left, node->value);
 
         // Dump node branches
         fprintf(outStream, NODE_LEFT_BRANCH_DUMP_REGEXP, (void *) node, (void *) node->left);
     
         result |= NODE_HAS_LEFT_BRANCH;
     }
-    
-    if (node->right != NULL)
+    else if (node->right != NULL)
     {
-        fprintf(outStream, NODE_DUMP_W_RIGHT_BRANCH_REGEXP, (void *) node, node->value, (void *) node->right);
+        fprintf(outStream, NODE_DUMP_W_ONLY_RIGHT_BRANCH_REGEXP, (void *) node, node->value, (void *) node->right);
         fprintf(outStream, NODE_RIGHT_BRANCH_DUMP_REGEXP, (void *) node, (void *) node->right);
 
         result |= NODE_HAS_RIGHT_BRANCH;
     }
-    
-    if (node->left == NULL && node->right == NULL)
+    else
     {
         // Dump node WO branches (left and right)
         fprintf(outStream, NODE_DUMP_WO_BRANCHES_REGEXP, (void *) node, node->value);
@@ -169,6 +176,7 @@ EXIT_CODES akinatorDumpPlayTree(tree_t *tree)
 
     // Output file name
     char filename[MAX_LINE_STR_LENGTH + 1] = {};  // Count '\0'
+    printf("Output file name:");
     IS_ERROR(readLine(filename))
     {
         PRINT_ERROR_TRACING_MESSAGE(AKINATOR_EXIT_CODES::ERROR_READING_LINE);
@@ -181,7 +189,7 @@ EXIT_CODES akinatorDumpPlayTree(tree_t *tree)
     strcat(fileNameWExtension, OUTPUT_DUMP_FILE_EXTENSION);
 
     // Open || create output file
-    FILE *outStream = fopen(filename, "w");
+    FILE *outStream = fopen(fileNameWExtension, "w");
     CHECK_FOPEN_RESULT(outStream);
 
     // Dump
@@ -204,6 +212,54 @@ EXIT_CODES akinatorDumpPlayTree(tree_t *tree)
     system(command);
 
     return EXIT_CODES::NO_ERRORS;
+}
+
+// TODO: implementation
+static int guessNode(treeNode_t *node)
+{
+    // Error check
+    assert(node != NULL && "EXIT_CODES::PASSED_OBJECT_IS_NULLPTR");
+
+    // Guess question
+    printf(GUESS_NODE_QUESTION_REGEXP, node->value);
+
+    // Guess decision
+    char line[MAX_LINE_STR_LENGTH + 1] = {};
+    EXIT_CODES READLINE_EXIT_CODE = EXIT_CODES::NO_ERRORS;
+    while ((READLINE_EXIT_CODE = readLine(line)) == EXIT_CODES::NO_ERRORS)
+    {
+        if (!strcmp(line, "N"))
+        {
+            if (node->left != NULL)
+            {
+                return NODE_HAS_LEFT_BRANCH;
+            }
+            else
+            {
+                // Akinator losed => ask for this new word
+                printf("Ohhh, what is this word then?\n");
+                assert(readLine(line) != EXIT_CODES::NO_ERRORS && "AKINATOR_EXIT_CODES::BAD_INPUT_OF_SECRET_WORD");
+
+                // TODO: ferther implementation
+            }
+        }
+        else if (!strcmp(line, "Y"))
+        {
+            if (node->right != NULL)
+            {
+                return NODE_HAS_RIGHT_BRANCH;
+            }
+            else
+            {
+                printf(WINNING_MESSAGE);
+                return NODE_HAS_NOT_ANY_BRANCHES;
+            }
+        }
+        else
+        {
+            printf("Did not understand you. Please, repeat once again.\n");
+        }
+    }
 }
 
 // TODO: implementation

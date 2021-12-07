@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <stdbool.h>
 
-#define DEBUG_LEVEL 2
+#define DEBUG_LEVEL 0
 #include "../../debug/debug.h"
 #include "settings.h"
 
@@ -45,7 +45,7 @@ enum class REALLOC_MODES
 struct stack_t
 {
     #if STACK_CANARY == 1
-        const int canaryLeft = CANARY_VALUE;
+        const int canaryLeft = CANARY_STRUCT_VALUE;
     #endif
 
     stackElem_t *data = NULL;
@@ -53,7 +53,7 @@ struct stack_t
     int size = -1;
 
     #if STACK_CANARY == 1
-        const int canaryRight = CANARY_VALUE;
+        const int canaryRight = CANARY_STRUCT_VALUE;
     #endif
 
     #if STACK_HASH == 1

@@ -54,7 +54,7 @@
         }
 
         // Stack structure canary check
-        if (stack->canaryLeft != CANARY_VALUE || stack->canaryRight != CANARY_VALUE)
+        if (stack->canaryLeft != CANARY_STRUCT_VALUE || stack->canaryRight != CANARY_STRUCT_VALUE)
         {
             *result = false;
 
@@ -65,7 +65,7 @@
         // Stack data canary check
         stackElem_t *canaryLeft  = (stackElem_t *) ((char *) stack->data - LEFT_CANARY_SIZE);
         stackElem_t *canaryRight = (stackElem_t *) ((char *) stack->data + stack->capacity * sizeof(stackElem_t));
-        if (fabs((double) *canaryLeft - CANARY_VALUE) > 0 || fabs((double) *canaryRight - CANARY_VALUE) > 0)
+        if (fabs((double) ((stackElem_t) *canaryLeft - CANARY_VALUE)) > 0 || fabs((double) ((stackElem_t) *canaryRight - CANARY_VALUE)) > 0)
         {
             *result = false;
 

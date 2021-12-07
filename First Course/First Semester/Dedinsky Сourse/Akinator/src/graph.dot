@@ -1,0 +1,23 @@
+digraph Tree {
+	Node_0000020ab7f71520 [shape="record", label="{ <left> 0000020ab7f71570 | Cool? | <right> 0000020ab7f71660 }"];
+	Node_0000020ab7f71520:<left> -> Node_0000020ab7f71570 [label="No"];
+	Node_0000020ab7f71520:<right> -> Node_0000020ab7f71660 [label="Yes"];
+	Node_0000020ab7f71660 [shape="record", label="{ <left> 0000020ab7f716b0 | Is it yummy? | <right> 0000020ab7f71840 }"];
+	Node_0000020ab7f71660:<left> -> Node_0000020ab7f716b0 [label="No"];
+	Node_0000020ab7f71660:<right> -> Node_0000020ab7f71840 [label="Yes"];
+	Node_0000020ab7f71840 [shape="record", label="{ Algem }"];
+	Node_0000020ab7f716b0 [shape="record", label="{ <left> 0000020ab7f71700 | Is it fresh? | <right> 0000020ab7f717f0 }"];
+	Node_0000020ab7f716b0:<left> -> Node_0000020ab7f71700 [label="No"];
+	Node_0000020ab7f716b0:<right> -> Node_0000020ab7f717f0 [label="Yes"];
+	Node_0000020ab7f717f0 [shape="record", label="{ juice }"];
+	Node_0000020ab7f71700 [shape="record", label="{ <left> 0000020ab7f71750 | Pink? | <right> 0000020ab7f717a0 }"];
+	Node_0000020ab7f71700:<left> -> Node_0000020ab7f71750 [label="No"];
+	Node_0000020ab7f71700:<right> -> Node_0000020ab7f717a0 [label="Yes"];
+	Node_0000020ab7f717a0 [shape="record", label="{ Wine }"];
+	Node_0000020ab7f71750 [shape="record", label="{ Sausage }"];
+	Node_0000020ab7f71570 [shape="record", label="{ <left> 0000020ab7f715c0 | Does it sleep? | <right> 0000020ab7f71610 }"];
+	Node_0000020ab7f71570:<left> -> Node_0000020ab7f715c0 [label="No"];
+	Node_0000020ab7f71570:<right> -> Node_0000020ab7f71610 [label="Yes"];
+	Node_0000020ab7f71610 [shape="record", label="{ You }"];
+	Node_0000020ab7f715c0 [shape="record", label="{ Program }"];
+}
