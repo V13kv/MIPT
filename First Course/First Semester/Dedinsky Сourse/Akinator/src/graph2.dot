@@ -5,7 +5,11 @@ digraph Tree {
 	Node_000001a5ef461660 [shape="record", label="{ <left> 000001a5ef4616b0 | Is it yummy? | <right> 000001a5ef461840 }"];
 	Node_000001a5ef461660:<left> -> Node_000001a5ef4616b0 [label="No"];
 	Node_000001a5ef461660:<right> -> Node_000001a5ef461840 [label="Yes"];
-	Node_000001a5ef461840 [shape="record", label="{ Algem }"];
+	Node_000001a5ef461840 [shape="record", label="{ <left> 000001a5ef461940 | Algem | <right> NaN }"];
+	Node_000001a5ef461840:<left> -> Node_000001a5ef461940 [label="No"];
+	Node_000001a5ef461940 [shape="record", label="{ <left> NaN | Is it a fruit? | <right> 000001a5ef4618f0 }"];
+	Node_000001a5ef461940:<right> -> Node_000001a5ef4618f0 [label="Yes"];
+	Node_000001a5ef4618f0 [shape="record", label="{ pumpkin }"];
 	Node_000001a5ef4616b0 [shape="record", label="{ <left> 000001a5ef461700 | Is it fresh? | <right> 000001a5ef4617f0 }"];
 	Node_000001a5ef4616b0:<left> -> Node_000001a5ef461700 [label="No"];
 	Node_000001a5ef4616b0:<right> -> Node_000001a5ef4617f0 [label="Yes"];

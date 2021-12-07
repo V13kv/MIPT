@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>  // for strcpy
 
+#include <assert.h>  // for assert
+
 #define DEBUG_LEVEL 1
 #include "../lib/debug/debug.h"
 
@@ -8,9 +10,23 @@
 #include "../include/tree.h"
 
 #include "../lib/stack/include/stack.h"
+#include "../lib/list/include/list.h"
 
 static EXIT_CODES databaseRead(FILE *database, tree_t *tree);
 static EXIT_CODES databaseReadNode(FILE *database, treeNode_t **node);
+
+EXIT_CODES treeNodeInit(treeNode_t **node, treeNodeElem_t *value)
+{
+    // Initialization
+    *node = (treeNode_t *) calloc(1, sizeof(treeNode_t));
+    CHECK_CALLOC_RESULT(node);
+    
+    strcpy((*node)->value, value);
+    (*node)->left  = NULL;
+    (*node)->right = NULL;
+
+    return EXIT_CODES::NO_ERRORS;
+}
 
 EXIT_CODES treeCtorFromDatabase(tree_t *tree, char *databaseFileName)
 {
@@ -137,10 +153,10 @@ static EXIT_CODES databaseReadNode(FILE *database, treeNode_t **node)
     return EXIT_CODES::NO_ERRORS;
 }
 
-EXIT_CODES treeDFSWActionFunction(tree_t *tree, actionFunction func, FILE *outStream)
+EXIT_CODES treeDFSWActionFunction(tree_t *tree, actionFunction func, void *arg)
 {
     // Error check
-    if (tree == NULL || func == NULL || outStream == NULL)
+    if (tree == NULL || func == NULL)
     {
         PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::PASSED_OBJECT_IS_NULLPTR);
         return EXIT_CODES::PASSED_OBJECT_IS_NULLPTR;
@@ -171,7 +187,7 @@ EXIT_CODES treeDFSWActionFunction(tree_t *tree, actionFunction func, FILE *outSt
         }
 
         // Push each child of a node
-        int nodeBranches = func(node, outStream);
+        int nodeBranches = func(node, arg);
         if (nodeBranches & NODE_HAS_LEFT_BRANCH)
         {
             IS_ERROR(stackPush(&stack, node->left))
@@ -199,4 +215,77 @@ EXIT_CODES treeDFSWActionFunction(tree_t *tree, actionFunction func, FILE *outSt
     }
 
     return EXIT_CODES::NO_ERRORS;
+}
+
+static EXIT_CODES nodeExportToDatabase(treeNode_t *node, FILE *database)
+{
+    // Error check
+    if (node == NULL || database == NULL)
+    {
+        PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::PASSED_OBJECT_IS_NULLPTR);
+        return EXIT_CODES::PASSED_OBJECT_IS_NULLPTR;
+    }
+
+    // Database begin
+    fprintf(database, "{\"%s\"", node->value);
+
+    // Export left branch
+    if (node->left != NULL)
+    {
+        fputc(' ', database);
+
+        nodeExportToDatabase(node->left, database);
+    }
+    
+    // Export right branch
+    if (node->right != NULL)
+    {
+        fputc(' ', database);
+
+        nodeExportToDatabase(node->right, database);
+    }
+
+    // Database end
+    fputc('}', database);
+
+    return EXIT_CODES::NO_ERRORS;
+}
+
+EXIT_CODES treeExportToDatabase(tree_t *tree, char *databaseFileName)
+{
+    // Error check
+    if (tree == NULL || databaseFileName == NULL)
+    {
+        PRINT_ERROR_TRACING_MESSAGE(EXIT_CODES::PASSED_OBJECT_IS_NULLPTR);
+        return EXIT_CODES::PASSED_OBJECT_IS_NULLPTR;
+    }
+
+    // Open database
+    FILE *database = fopen(databaseFileName, "w");
+    CHECK_FOPEN_RESULT(database);
+
+    // Export
+    IS_ERROR(nodeExportToDatabase(tree->root, database))
+    {
+        // Clean
+        fclose(database);
+
+        PRINT_ERROR_TRACING_MESSAGE(TREE_DATABASE_EXIT_CODES::ERROR_DURING_EXPORTING_TREE_TO_DATABASE);
+        return EXIT_CODES::BAD_FUNC_RESULT;
+    }
+
+    // Destruction
+    fclose(database);
+
+    return EXIT_CODES::NO_ERRORS;
+}
+
+// TODO: implement BFS using list (pushBack or append)
+int treeBFSSearch(tree_t *tree, treeNodeElem_t *searchValue)
+{
+    // Error check
+    assert(tree != NULL && searchValue != NULL && "EXIT_CODES::PASSED_OBJECT_IS_NULLPTR");
+
+    // Main BFS algorithm
+
 }

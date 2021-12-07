@@ -22,6 +22,8 @@ enum class TREE_DATABASE_EXIT_CODES
     DATABASE_READ_ERROR,
     DATABASE_STREAM_IS_EMPTY,
     BAD_DATABASE_FORMAT,
+    TREE_EXPORT_ERROR,
+    ERROR_DURING_EXPORTING_TREE_TO_DATABASE,
 };
 
 struct treeNode_t
@@ -37,10 +39,14 @@ struct tree_t
     treeNode_t *root = NULL;
 };
 
-typedef int (*actionFunction)(treeNode_t *node, FILE *outStream);
+typedef int (*actionFunction)(treeNode_t *node, void *arg);
 
+EXIT_CODES treeNodeInit(treeNode_t **node, treeNodeElem_t *value = NULL);
 EXIT_CODES treeCtorFromDatabase(tree_t *tree, char *databaseFileName);
-EXIT_CODES treeDFSWActionFunction(tree_t *tree, actionFunction func, FILE *outStream);
+EXIT_CODES treeExportToDatabase(tree_t *tree, char *databaseFileName);
+
+EXIT_CODES treeDFSWActionFunction(tree_t *tree, actionFunction func, void *arg = NULL);
+int treeBFSSearch(tree_t *tree, treeNodeElem_t *searchValue);
 
 
 #endif  // TREE_H
