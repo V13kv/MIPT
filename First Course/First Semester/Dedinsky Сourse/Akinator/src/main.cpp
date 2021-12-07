@@ -9,6 +9,7 @@
 
 void hint();
 
+// All functions that can be used here from akinator are returning error exit code (can be processed)
 int main(int argc, char **argv)
 {
     // Check argv count
@@ -30,18 +31,19 @@ int main(int argc, char **argv)
     while (true)
     {
         // Read playing mode
+        // TODO: treeDtor implement + paste here
         akinatorGetPlayMode(&mode);
 
-        printf("mode: %d\n", (int) mode);
         // Process playing mode
-        // if (mode != AKINATOR_GAME_MODES::EXIT)
-        // {
-        //     akinatorPlayGame(mode, &tree);
-        // }
-        // else
-        // {
-        //     break;
-        // }
+        if (mode != AKINATOR_GAME_MODES::EXIT)
+        {
+            // TODO: treeDtor implement + paste here
+            akinatorPlayGame(mode, &tree, argv[1]);
+        }
+        else
+        {
+            break;
+        }
     }
 
     return 0;

@@ -1,1 +1,1 @@
-{"крутое" {"прогается" {"Прога"} {"ты"}} {"вкусное" {"свежий" {"розовое" {"СОСИСКА"} {"Огурец"}} {"шоколад"}} {"мармелад"}}}
+{"Cool?" {"Does it sleep?" {"Program"} {"You"}} {"Is it yummy?" {"Is it fresh?" {"Pink?" {"Sausage"} {"Wine"}} {"juice"}} {"Algem" {"Is it a fruit?" {"pumpkin"}}}}}

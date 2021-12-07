@@ -1,0 +1,27 @@
+digraph Tree {
+	Node_000001a5ef461520 [shape="record", label="{ <left> 000001a5ef461570 | Cool? | <right> 000001a5ef461660 }"];
+	Node_000001a5ef461520:<left> -> Node_000001a5ef461570 [label="No"];
+	Node_000001a5ef461520:<right> -> Node_000001a5ef461660 [label="Yes"];
+	Node_000001a5ef461660 [shape="record", label="{ <left> 000001a5ef4616b0 | Is it yummy? | <right> 000001a5ef461840 }"];
+	Node_000001a5ef461660:<left> -> Node_000001a5ef4616b0 [label="No"];
+	Node_000001a5ef461660:<right> -> Node_000001a5ef461840 [label="Yes"];
+	Node_000001a5ef461840 [shape="record", label="{ <left> 000001a5ef461940 | Algem | <right> NaN }"];
+	Node_000001a5ef461840:<left> -> Node_000001a5ef461940 [label="No"];
+	Node_000001a5ef461940 [shape="record", label="{ <left> NaN | Is it a fruit? | <right> 000001a5ef4618f0 }"];
+	Node_000001a5ef461940:<right> -> Node_000001a5ef4618f0 [label="Yes"];
+	Node_000001a5ef4618f0 [shape="record", label="{ pumpkin }"];
+	Node_000001a5ef4616b0 [shape="record", label="{ <left> 000001a5ef461700 | Is it fresh? | <right> 000001a5ef4617f0 }"];
+	Node_000001a5ef4616b0:<left> -> Node_000001a5ef461700 [label="No"];
+	Node_000001a5ef4616b0:<right> -> Node_000001a5ef4617f0 [label="Yes"];
+	Node_000001a5ef4617f0 [shape="record", label="{ juice }"];
+	Node_000001a5ef461700 [shape="record", label="{ <left> 000001a5ef461750 | Pink? | <right> 000001a5ef4617a0 }"];
+	Node_000001a5ef461700:<left> -> Node_000001a5ef461750 [label="No"];
+	Node_000001a5ef461700:<right> -> Node_000001a5ef4617a0 [label="Yes"];
+	Node_000001a5ef4617a0 [shape="record", label="{ Wine }"];
+	Node_000001a5ef461750 [shape="record", label="{ Sausage }"];
+	Node_000001a5ef461570 [shape="record", label="{ <left> 000001a5ef4615c0 | Does it sleep? | <right> 000001a5ef461610 }"];
+	Node_000001a5ef461570:<left> -> Node_000001a5ef4615c0 [label="No"];
+	Node_000001a5ef461570:<right> -> Node_000001a5ef461610 [label="Yes"];
+	Node_000001a5ef461610 [shape="record", label="{ You }"];
+	Node_000001a5ef4615c0 [shape="record", label="{ Program }"];
+}
