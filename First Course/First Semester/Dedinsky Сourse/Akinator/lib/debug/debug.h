@@ -114,7 +114,9 @@ enum class EXIT_CODES
     #define OBJECT_VERIFY(object, type)
     #define CHECK_SSCANF_RESULT(ret)
     #define CHECK_FSEEK_RESULT(ret)
+    #define CHECK_FOPEN_RESULT(ret)
     #define CHECK_CALLOC_RESULT(ret)
+    #define CHECK_REALLOC_RESULT(ret)
     #define CHECK_UNGETC_RESULT(ret)
 
 #endif

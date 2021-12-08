@@ -13,11 +13,12 @@
 void akinatorModesHint()
 {
     printf("Modes: "    TURN_TO_YELLOW("[G]") "uess | "
+                        TURN_TO_YELLOW("[S]") "earch | "
                         TURN_TO_YELLOW("[D]") "ump | "
                         TURN_TO_YELLOW("[E]") "xit\n");
 }
 
-static EXIT_CODES readLine(char *line)
+EXIT_CODES readLine(char *line)
 {
     // Error check
     if (line == NULL)
@@ -65,6 +66,7 @@ EXIT_CODES akinatorGetPlayMode(AKINATOR_GAME_MODES *mode)
         switch (choiceMode)
         {
             case (char) AKINATOR_GAME_MODES::GUESS:
+            case (char) AKINATOR_GAME_MODES::SEARCH:
             case (char) AKINATOR_GAME_MODES::DUMP:
             case (char) AKINATOR_GAME_MODES::EXIT:
                 *mode = (AKINATOR_GAME_MODES) choiceMode;
@@ -267,29 +269,30 @@ static int guessNode(treeNode_t *node, void *arg)
                 treeNodeInit(&answerNode, line);
 
                 // Create new question (node)
-                printf(QUESTION_CREATE_MESSAGE, node->value);
-                do
-                {
-                    READ_LINE_UNTIL_CORRECT_INPUT(readLine(line));
-                } while (strcmp(line, Y_CHAR) && strcmp(line, N_CHAR));
+                // printf(QUESTION_CREATE_MESSAGE, node->value);
+                // do
+                // {
+                //     READ_LINE_UNTIL_CORRECT_INPUT(readLine(line));
+                // } while (strcmp(line, Y_CHAR) && strcmp(line, N_CHAR));
 
-                if (!strcmp(line, Y_CHAR))
-                {
-                    // Ask for the question
-                    printf(QUESTION_INPUT_MESSAGE, node->value);
-                    READ_LINE_UNTIL_CORRECT_INPUT(readLine(line));
+                // if (!strcmp(line, Y_CHAR))
+                // {
 
-                    // Create new question (node)
-                    treeNode_t *questionNode = NULL;
-                    treeNodeInit(&questionNode, line);
+                // Ask for the question
+                printf(QUESTION_INPUT_MESSAGE, node->value);
+                READ_LINE_UNTIL_CORRECT_INPUT(readLine(line));
 
-                    // Connect question && answer nodes
-                    questionNode->right = answerNode;
-                    questionNode->left  = NULL;
+                // Create new question (node)
+                treeNode_t *questionNode = NULL;
+                treeNodeInit(&questionNode, line);
 
-                    // Connect parent node && question nodes
-                    node->left = questionNode;
-                }
+                // Connect question && answer nodes
+                questionNode->right = answerNode;
+                questionNode->left  = NULL;
+
+                // Connect parent node && question nodes
+                node->left = questionNode;
+                // }
 
                 return NODE_HAS_NOT_ANY_BRANCHES;
             }
@@ -338,7 +341,6 @@ EXIT_CODES akinatorGuessPlay(tree_t *tree)
 }
 
 
-// TODO: implementation
 EXIT_CODES akinatorSearch(tree_t *tree)
 {
     // Error check
@@ -355,7 +357,11 @@ EXIT_CODES akinatorSearch(tree_t *tree)
     READ_LINE_UNTIL_CORRECT_INPUT(readLine(searchValue));
 
     // BFS algorithm for quickier search
-    treeBFSSearch(tree, searchValue);
+    IS_ERROR(treeBFSSearch(tree, searchValue))
+    {
+        PRINT_ERROR_TRACING_MESSAGE(TREE_EXIT_CODES::ERROR_DURING_TERE_BFS_FUNCTION);
+        return EXIT_CODES::BAD_FUNC_RESULT;
+    }
 
     return EXIT_CODES::NO_ERRORS;
 }

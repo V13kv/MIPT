@@ -9,8 +9,10 @@
 #define treeNodeElem_t                          char
 #define TO_STR(object)                          STRINGIFY(object)
 #define CLEAR_CONSOLE_COMMAND                   "cls"
-#define DEFAULT_CHAR_VALUE                      'E'
-#define BRACKET_REGEXP                          " %1[{}]"
+#define DEFAULT_CHAR_VALUE                      'E'                   
+#define BOTH_BRACKETS_REGEXP                    " %1[{}]"
+#define OPEN_BRACKET_REGEXP                     " %1[{]"
+#define CLOSE_BRACKET_REGEXP                    " %1[}]"
 #define DEFAULT_LINE_READ_REGEXP(maxLineLength) " %" TO_STR(maxLineLength) "[^\n]%n"
 #define OUTPUT_DUMP_FILE_EXTENSION              ".dot"
 #define COMMAND_FOR_GRAPH_DUMP_CONSTRUCTION     "dot.exe -Tsvg %s -o %s.svg"
@@ -30,6 +32,12 @@
 #define ANSWER_INPUT_MESSAGE                    "Ohhh, what is the answer then?\n"
 #define INCORRECT_GUESS_INPUT_CHOICE            "Did not understand you. Please, repeat once again.\n"
 #define TREE_SEARCH_FOR_INPUT_MESSAGE           "What do you want to search for?\n[INPUT] >> "
+#define VALUE_FOUND_MESSAGE                     "Such value is successfully found!\n"
+#define VALUE_NOT_FOUND_MESSAGE                 "Such value is not found.\n"
+#define NODE_INFO_MESSAGE                       "Node(%p) INFO:\n"
+#define NODE_VALUE_MESSAGE                      "\tnode->value: %s\n"
+#define NODE_LEFT_BRANCH_MESSAGE                "\tnode->left: %s (%p)\n"
+#define NODE_RIGHT_BRANCH_MESSAGE               "\tnode->right: %s (%p)\n"   
 #define MAX_TREE_NODE_VALUE_STR_LENGTH          50
 #define MAX_LINE_STR_LENGTH                     150
 

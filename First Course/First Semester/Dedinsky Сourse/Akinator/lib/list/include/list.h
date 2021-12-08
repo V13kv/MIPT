@@ -14,12 +14,17 @@ enum class LIST_EXIT_CODES
     BAD_LIST_CAPACITY_INCREASE_FUNC_RESULT,
     BAD_LIST_INDEX_PASSED,
     BAD_LIST_INSERT_AFTER_RESULT_IN_APPEND,
+    LIST_CONSTRUCTION_ERROR,
+    LIST_DESTRUCTION_ERROR,
+    LIST_APPEND_ERROR,
+    LIST_GET_NEXT_NODE_ERROR,
+    LIST_REMOVE_ERROR,
 };
 
 struct node_t
 {
     index_t prev        = POISON;
-    nodeDataType_t data = POISON;
+    nodeDataType_t data = DATA_POISON;
     index_t next        = POISON;
 };
 

@@ -1,1 +1,1 @@
-{"Cool?" {"Does it sleep?" {"Program"} {"You"}} {"Is it yummy?" {"Is it fresh?" {"Pink?" {"Sausage"} {"Wine"}} {"juice"}} {"Algem" {"Is it a fruit?" {"pumpkin"}}}}}
+{"Cool?" {"Does it sleep?" {"Program" {"Is it an animal?" {"camel"}}} {"You"}} {"Is it yummy?" {"Is it fresh?" {"Pink?" {"Sausage" {"Is it pretty?" {"hippo"}}} {"Wine"}} {"juice" {"NICE?" {"nice"}}}} {"Algem" {"Is it a fruit?" {"pumpkin"}}}}}

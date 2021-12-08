@@ -38,12 +38,12 @@ EXIT_CODES listCtor(list_t *list, int listCapacity)
     // Init fields
     list->nodes     = nodes;
     list->capacity  = listCapacity;
-    list->nodes[0]  = {0, POISON, 0};        // setup head node
+    list->nodes[0]  = {0, DATA_POISON, 0};        // setup head node
     for (int node = 1; node < list->capacity; ++node)
     {
         // list->nodes[node].prev = node - 1; FIXME:
         list->nodes[node].prev = POISON;
-        list->nodes[node].data = POISON;
+        list->nodes[node].data = DATA_POISON;
         list->nodes[node].next = node + 1;
     }
     list->nodes[list->capacity - 1].next = 0;
@@ -152,8 +152,8 @@ EXIT_CODES listAppend(list_t *list, nodeDataType_t value)
     OBJECT_VERIFY(list, list);
 
     // Append
-    printf("list->size: %d\n", list->size);
-    printf("list->nodes[list->head].prev: %d\n", list->nodes[list->head].prev);
+    // printf("list->size: %d\n", list->size);
+    // printf("list->nodes[list->head].prev: %d\n", list->nodes[list->head].prev);
     IS_ERROR(listInsertAfter(list, list->nodes[list->head].prev, value))
     {
         PRINT_ERROR_TRACING_MESSAGE(LIST_EXIT_CODES::BAD_LIST_INSERT_AFTER_RESULT_IN_APPEND);
@@ -179,7 +179,7 @@ EXIT_CODES listRemove(list_t *list, index_t index)
 
     // Delete `index` node (poison it)
     list->nodes[index].prev = POISON;
-    list->nodes[index].data = POISON;
+    list->nodes[index].data = DATA_POISON;
     list->nodes[index].next = list->freeNode;
     list->freeNode = index;
 
@@ -206,7 +206,7 @@ EXIT_CODES listCapacityIncrease(list_t *list)
     {
         // list->nodes[node].prev = node - 1;
         list->nodes[node].prev = POISON;
-        list->nodes[node].data = POISON;
+        list->nodes[node].data = DATA_POISON;
         list->nodes[node].next = node + 1;
     }
     list->nodes[newCapacity - 1].next = 0;

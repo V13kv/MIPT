@@ -28,6 +28,7 @@ enum class AKINATOR_GAME_MODES
 };
 
 void akinatorModesHint();
+EXIT_CODES readLine(char *line);
 
 EXIT_CODES akinatorGetPlayMode(AKINATOR_GAME_MODES *mode);
 EXIT_CODES akinatorPlayGame(AKINATOR_GAME_MODES mode, tree_t *tree, char *databaseFileName);
