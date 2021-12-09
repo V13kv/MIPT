@@ -70,7 +70,7 @@ EXIT_CODES akinatorGetPlayMode(AKINATOR_GAME_MODES *mode)
             case (char) AKINATOR_GAME_MODES::DUMP:
             case (char) AKINATOR_GAME_MODES::EXIT:
                 *mode = (AKINATOR_GAME_MODES) choiceMode;
-                goto MODE_SUCCESSFULLY_READ;
+                return EXIT_CODES::NO_ERRORS;
             default:
                 break;
         }
@@ -80,10 +80,8 @@ EXIT_CODES akinatorGetPlayMode(AKINATOR_GAME_MODES *mode)
         // Hint
         akinatorModesHint();
     }
-    return READLINE_EXIT_CODE;
 
-    MODE_SUCCESSFULLY_READ:
-        return EXIT_CODES::NO_ERRORS;
+    return READLINE_EXIT_CODE;
 }
 
 EXIT_CODES akinatorPlayGame(AKINATOR_GAME_MODES mode, tree_t *tree, char *databaseFileName)
@@ -147,8 +145,12 @@ static int dumpNode(treeNode_t *node, void *arg)
     if (node->left != NULL && node->right != NULL)
     {
         // Dump node with both branches (left and right)
-        fprintf(outStream, NODE_DUMP_W_BOTH_BRANCHES_MESSAGE, (void *) node, (void *) node->left, node->value, (void *) node->right);
-    
+        #ifdef BEAUTIFUL_DUMP
+            fprintf(outStream, UNIVERSAL_BEAUTIFUL_DUMP_MESSAGE, (void *) node, node->value);
+        #else
+            fprintf(outStream, NODE_DUMP_W_BOTH_BRANCHES_MESSAGE, (void *) node, (void *) node->left, node->value, (void *) node->right);
+        #endif
+
         // Dump node branches
         fprintf(outStream, NODE_LEFT_BRANCH_DUMP_MESSAGE, (void *) node, (void *) node->left);
         fprintf(outStream, NODE_RIGHT_BRANCH_DUMP_MESSAGE, (void *) node, (void *) node->right);
@@ -158,7 +160,11 @@ static int dumpNode(treeNode_t *node, void *arg)
     else if (node->left != NULL)
     {
         // Dump node with branch
-        fprintf(outStream, NODE_DUMP_W_ONLY_LEFT_BRANCH_MESSAGE, (void *) node, (void *) node->left, node->value);
+        #ifdef BEAUTIFUL_DUMP
+            fprintf(outStream, UNIVERSAL_BEAUTIFUL_DUMP_MESSAGE, (void *) node, node->value);
+        #else
+            fprintf(outStream, NODE_DUMP_W_ONLY_LEFT_BRANCH_MESSAGE, (void *) node, (void *) node->left, node->value);
+        #endif
 
         // Dump node branches
         fprintf(outStream, NODE_LEFT_BRANCH_DUMP_MESSAGE, (void *) node, (void *) node->left);
@@ -167,7 +173,14 @@ static int dumpNode(treeNode_t *node, void *arg)
     }
     else if (node->right != NULL)
     {
-        fprintf(outStream, NODE_DUMP_W_ONLY_RIGHT_BRANCH_MESSAGE, (void *) node, node->value, (void *) node->right);
+        // Dump node with branch
+        #ifdef BEAUTIFUL_DUMP
+            fprintf(outStream, UNIVERSAL_BEAUTIFUL_DUMP_MESSAGE, (void *) node, node->value);
+        #else
+            fprintf(outStream, NODE_DUMP_W_ONLY_RIGHT_BRANCH_MESSAGE, (void *) node, node->value, (void *) node->right);
+        #endif
+
+        // Dump node branches
         fprintf(outStream, NODE_RIGHT_BRANCH_DUMP_MESSAGE, (void *) node, (void *) node->right);
 
         result |= NODE_HAS_RIGHT_BRANCH;
@@ -194,7 +207,7 @@ EXIT_CODES akinatorDumpPlayTree(tree_t *tree)
 
     // Output file name
     char filename[MAX_LINE_STR_LENGTH + 1] = {};  // Count '\0'
-    printf("Output file name:");
+    printf(OUTPUT_FILE_NAME_MESSAGE);
     IS_ERROR(readLine(filename))
     {
         PRINT_ERROR_TRACING_MESSAGE(AKINATOR_EXIT_CODES::ERROR_READING_LINE);
@@ -260,25 +273,7 @@ static int guessNode(treeNode_t *node, void *arg)
             }
             else
             {
-                // Akinator losed => ask for this new word
-                printf(ANSWER_INPUT_MESSAGE);
-                READ_LINE_UNTIL_CORRECT_INPUT(readLine(line));
-
-                // Create new answer (node)
-                treeNode_t *answerNode = NULL;
-                treeNodeInit(&answerNode, line);
-
-                // Create new question (node)
-                // printf(QUESTION_CREATE_MESSAGE, node->value);
-                // do
-                // {
-                //     READ_LINE_UNTIL_CORRECT_INPUT(readLine(line));
-                // } while (strcmp(line, Y_CHAR) && strcmp(line, N_CHAR));
-
-                // if (!strcmp(line, Y_CHAR))
-                // {
-
-                // Ask for the question
+                // Akinator losed => update answer
                 printf(QUESTION_INPUT_MESSAGE, node->value);
                 READ_LINE_UNTIL_CORRECT_INPUT(readLine(line));
 
@@ -286,13 +281,25 @@ static int guessNode(treeNode_t *node, void *arg)
                 treeNode_t *questionNode = NULL;
                 treeNodeInit(&questionNode, line);
 
-                // Connect question && answer nodes
-                questionNode->right = answerNode;
-                questionNode->left  = NULL;
+                // Ask for answer
+                printf(ANSWER_INPUT_MESSAGE);
+                READ_LINE_UNTIL_CORRECT_INPUT(readLine(line));
 
-                // Connect parent node && question nodes
-                node->left = questionNode;
-                // }
+                // Create new answer (node)
+                treeNode_t *answerNode = NULL;
+                treeNodeInit(&answerNode, line);
+
+                // Temp node to save current node value
+                treeNode_t *tempNode = {};
+                treeNodeInit(&tempNode, node->value);
+
+                // Change current node value to the question
+                memset(node->value, 0, sizeof(node->value));
+                strcpy(node->value, questionNode->value);
+
+                // Connect question && answer nodes
+                node->left  = tempNode;
+                node->right = answerNode;
 
                 return NODE_HAS_NOT_ANY_BRANCHES;
             }

@@ -31,6 +31,7 @@ enum class TREE_DATABASE_EXIT_CODES
     CLOSE_BRACKET_NOT_FOUND,
 };
 
+// TODO: parent node to retrieve path from bfs
 struct treeNode_t
 {
     treeNode_t *left = NULL;

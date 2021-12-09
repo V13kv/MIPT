@@ -54,7 +54,7 @@ int main(int argc, char **argv)
             break;
         }
 
-        printf(TURN_TO_YELLOW("Press any char key to continue..."));
+        printf(TURN_TO_YELLOW("Type any char key to continue..."));
         READ_LINE_UNTIL_CORRECT_INPUT(readLine(line));
     }
 
